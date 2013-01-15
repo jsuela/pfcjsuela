@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+  <title>Mi Resumen</title>
+  <link rel="stylesheet" type="text/css" href="/cses" /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="/">Inicio</a>
+  <li><a href="/noteros">Lista Noteros</a>
+  <li><a href="/usuarios">Lista Usuarios</a>
+  <li><a href="/conf">Configuración</a>
+  <li><a href="/micronoteros">Mis Micronoteros</a>
+  <li><a href="/update">Actualizar</a>
+  <li><a href="/logout">Logout</a>
+
+</ul>
+
+<!-- Contenido principal -->
+
+
+
+{% block content %}
+
+
+
+
+{% csrf_token %}
+<h1>Configuración de la cuenta</h1>
+<h3>Para configurar su css, haga click en Conf.CSS:<form action="/conf/skin" method="get"><input type="submit" value="Conf. CSS"></form></h3>	
+
+<h3>Para configurar su perfil, rellene el formulario y haga click en config(debe rellenar el : </h3>
+
+
+	<form action="/conf" method="post">
+        <p>Nombre Público: <input type="text" name="user"></p>
+        <p>Nueva Password: <input type="password" name="password"></p>
+        <p>Introduzca de nuevo Password: <input type="password" name="password2"></p>
+        <p>Idioma(en o es): <input type="text" name="idioma"></p>
+        <input type="submit" value="config">
+    </form>
+</body>
+</html>
+
+{% endblock %}
+
+

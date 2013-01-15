@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>PreguntaRus</title>
+<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+<link href=/cses rel="stylesheet" type="text/css" media="screen" />
+
+</head>
+<body>
+<div id="wrapper">
+	<div id="header-wrapper">
+		<div id="header">
+			<div id="logo">
+				<h1><a href="#">Pregunta'R'us </a></h1>
+				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">X</a></p>
+			</div>
+		</div>
+	</div>
+	<!-- end #header -->
+	<div id="menu">
+		<ul>
+			<li><a href="/home">Ranking</a></li>
+			<li class="current_page_item"><a href="/mispreguntas">Mis preguntas</a></li>
+			<li><a href="/conf">Configurar</a></li>
+			<li><a href="/contact">Contactar</a></li>
+			<li><a href="/logout">Cerrar Sesión</a></li>
+		</ul>
+	</div>
+	<!-- end #menu -->
+	<div id="page">
+		<div id="page-bgtop">
+			<div id="page-bgbtm">
+				<div id="content">
+					<div class="post">
+
+						<div class="entry">
+							<p>
+
+
+								{% block content %}
+
+										{% if user %}
+											{% if error %}
+												<h1> {{ error }}</h1> 
+												<h3><a href="javascript:history.back()">Volver atrás</h3>
+											{% elif exito %}
+												<h3> {{ exito }} <a href="/mispreguntas">Volver atrás</a></h3>
+											{% endif %}
+											{% if listadoprofesor %}
+												<h2>Introduzca una pregunta nueva</h2>
+												<form name=miformulario method="post" action="/mispreguntas">{% csrf_token %}
+													<p>Pregunta: <input type="text" name="pregunta"></p>
+													<p>Respuesta: <input type="text" name="respuesta"><input type="radio" name="respuesta1_correcta" value="true">Si <input type="radio" name="respuesta1_correcta" value="false"checked>No</p>
+
+													<p>Respuesta2: <input type="text" name="respuesta2"><input type="radio" name="respuesta2_correcta" value="true">Si <input type="radio" name="respuesta2_correcta" value="false"checked>No</p>
+													<p>Respuesta3: <input type="text" name="respuesta3"><input type="radio" name="respuesta3_correcta" value="true">Si <input type="radio" name="respuesta3_correcta" value="false" checked>No</p>
+													<input type="submit" value="cargar">
+												</form>
+
+ 
+
+												<h2>Listado preguntas almacenadas</h2>
+												<!-- si es profesor -->
+												{% for l in listadoprofesor %}
+													<li><h2>{{ l.pregunta }}</h2></li>
+													<!-- mostramos icono tick verde en la verdadera -->
+													{% ifequal l.respuesta1_correcta "true" %}
+														<h4>Respuesta 1: {{ l.respuesta }} <img src="/imagen/tick.png" width="15" height="15"></h4>
+													{% else %}
+														<h4>Respuesta 1: {{ l.respuesta }}</h4>
+													{% endifequal %}
+
+													{% ifequal l.respuesta2_correcta "true" %}
+														<h4>Respuesta 2: {{ l.respuesta2 }} <img src="/imagen/tick.png" width="15" height="15"></h4>
+													{% else %}
+														<h4>Respuesta 2: {{ l.respuesta2 }}</h4>
+													{% endifequal %}
+
+													{% ifequal l.respuesta3_correcta "true" %}
+														<h4>Respuesta 3 : {{ l.respuesta3 }} <img src="/imagen/tick.png" width="15" height="15"></h4>
+													{% else %}
+														<h4>Respuesta 3: {{ l.respuesta3 }}</h4>
+													{% endifequal %}
+
+													</li>
+												{% endfor %}
+											<!-- si es alumno MOSTRAR LAS HECHAS Y LAS QUE NO -->
+											{% elif listadoalumno %}
+												<h1>Listado preguntas pendientes</h1>
+												{% if listadopendientes %}
+													{% for l in listadopendientes %}
+														<li><h3>{{ l.pregunta }}</h3>
+														<h4>{{ l.respuesta }}</h4>
+														<h4>{{ l.respuesta2 }}</h4>
+														<h4>{{ l.respuesta3 }}</h4></li>
+													{% endfor %}
+												{% else %}
+													<h4>No hay preguntas pendientes</h4>
+												{% endif %}
+												<h1>Listado preguntas respondidas</h1>
+												{% if listadorespondidas %}
+													{% for l in listadorespondidas %}
+														{% ifequal l.respuesta_usuario_correcta "true" %}
+															<li><h3>{{ l.pregunta }} <img src="/imagen/tick.png" width="15" height="15"></h3>
+														{% else %}
+															<li><h3>{{ l.pregunta }} <img src="/imagen/cross.png" width="15" height="15"></h3>
+														{% endifequal %}
+														<h4>Respuesta dada: {{ l.respuesta_dada }}</h4>
+														<h4>Respuesta correcta: {{ l.respuesta }}</h4>
+													{% endfor %}
+												{% else %}
+													<h4>No has respondido ninguna pregunta todavía</h4>
+												{% endif %}
+											{% endif %}
+									
+										{% else %}
+
+												<p>Inicia sesión pinchando <a href="/login">aquí. </a></p>	
+	
+										{% endif %}
+
+								{% endblock %}
+
+
+
+							</p>
+							
+						</div>
+					</div>
+
+					
+					<div style="clear: both;">&nbsp;</div>
+				</div>
+				<!-- end #content -->
+				<div id="sidebar">
+					<ul>
+						<li>
+							<h2>Asignatura X</h2>
+							<p>Bla bla bla bla blabla blabla blabla blabla blabla blabla blabla blabla bla</p>
+						</li>
+						<li>
+							<h2>Enlaces</h2>
+							<ul>
+								<li><a href="http://docencia.etsit.urjc.es/moodle/">Moodle</a></li>
+								<li><a href="https://twitter.com/urjc_sat/">Twitter X</a></li>
+								<li><a href="https://play.google.com/store?hl=es">Enlace App</a></li>
+							</ul>
+						</li>
+
+						<li>
+							<h2>Twitter</h2>
+							<ul>
+
+
+								<script charset="utf-8" src="http://widgets.twimg.com/j/2/widget.js"></script>
+								<script>
+								new TWTR.Widget({
+								  version: 2,
+								  type: 'profile',
+								  rpp: 4,
+								  interval: 30000,
+								  width: 250,
+								  height: 300,
+								  theme: {
+									shell: {
+									  background: '#b8afb8',
+									  color: '#050505'
+									},
+									tweets: {
+									  background: '#f5edf5',
+									  color: '#030303',
+									  links: '#f70830'
+									}
+								  },
+								  features: {
+									scrollbar: false,
+									loop: false,
+									live: false,
+									behavior: 'all'
+								  }
+								}).render().setUser('urjc_sat').start();
+								</script>
+
+
+							</ul>
+						</li>
+
+					</ul>
+				</div>
+				<!-- end #sidebar -->
+				<div style="clear: both;">&nbsp;</div>
+			</div>
+		</div>
+	</div>
+	<!-- end #page -->
+</div>
+<div id="footer">
+	<p>Copyright (c) 2012. All rights reserved.</p>
+</div>
+<!-- end #footer -->
+</body>
+</html>

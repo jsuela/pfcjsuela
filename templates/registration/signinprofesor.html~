@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>PreguntaRus</title>
+<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+<link href=/cses rel="stylesheet" type="text/css" media="screen" />
+</head>
+
+	<div id="header-wrapper">
+		<div id="header">
+			<div id="logo">
+				<h1><a href="/">Pregunta'R'us </a></h1>
+				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">SAT</a></p>
+			</div>
+		</div>
+	</div>
+
+<body>
+	<center><p>
+		{% block content %}
+
+				{% if user %}
+					<h2>Hola, {{ user }}!</h2>
+					<h3> {{ exito }} </h3>
+					<p>Inicia sesión pinchando <a href="/login">aquí. </a></p>	
+				{% else %}
+						{% if error %}
+							<h1> {{ error }} </h1>
+							<h4><a href="javascript:history.back()">Volver atrás</h4>	
+						{% else %}
+						<form method="post" action="/signin/profesor">{% csrf_token %}
+							<p>Usuario: <input type="text" name="user"></p>
+							<p>Contraseña: <input type="password" name="password"></p>
+							<p>Repite contraseña: <input type="password" name="password2"></p>
+							<p>E-mail: <input type="text" name="email"></p>
+							<p>Clave administrador: <input type="password" name="clave"></p>
+							<input type="submit" value="signin">
+						</form>
+					{% endif %}
+				{% endif %}
+
+
+				
+
+
+		{% endblock %}
+	</p></center>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<div id="cabecera">
+		<div id="logotipo">
+			<img src="http://xperiax10.files.wordpress.com/2010/07/android_logo.gif" width="270" height="80"
+       			alt="Haz clic aquí para volver a la página de inicio"/>
+		</div>
+		<div id="Menu">
+			<h1>hola que tal</h1>
+			<h1>Genial</h1>
+		</div>
+		
+</div>
+
+<center>
+
+	{%ifnotequal username ''%}
+    	<h1>Usuario: {{ username }}</h1>
+	{%else%}
+		<h1>{{ username }}</h1>
+	{%endifnotequal%}
+
+
+    <h2>{{ body }}</h2>
+
+
+
+</center>
+
+
+
+
+
+
+
+
+
+EN mi css debe haber:
+
+/* HEADER */
+
+#header { position:relative; height:6.5em; background:#092e20; }
+#header h1#logo { margin:0; width:111px; height:41px; position:absolute; bottom:10px; left:25px; }
+
+/* NAV */
+
+#nav-global { position:absolute; margin:0; bottom:0; right:0; font-family:"Trebuchet MS",sans-serif; white-space:nowrap; }
+#nav-global li { display:block; float:left; list-style-type:none; margin:0; padding:0; }
+

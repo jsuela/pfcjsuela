@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+  <title>My Summary</title>
+  <link rel="stylesheet" type="text/css" href="/cses"  /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="/">Home</a>
+  <li><a href="/noteros">Blogger's List</a>
+  <li><a href="/usuarios">User's List</a>
+  <li><a href="/conf">Account Settings</a>
+  <li><a href="/micronoteros">My bloggers</a>
+  <li><a href="/update">Update</a>
+  <li><a href="/logout">Logout</a>
+</ul>
+
+<!-- Contenido principal -->
+
+
+{% block content %}
+
+{% if user %}
+    <h2>Hi, {{ user }}!</h2>
+{% else %}
+    <h2>Wellcome, user. Please Log in.</h2>
+{% endif %}
+
+<!-- Para el caso de que haya error o exito -->
+{% if error %}
+
+
+	<h3> {{ error }} </h3>	
+
+{% endif %}
+
+{% if exito %}
+
+
+	<h3> {{ exito }} </h3>	
+
+{% endif %}
+
+
+
+
+
+<!-- Para el listado de las ultimas 50 -->
+{% if body %}
+
+	<h1>News Feeds</h1>
+
+    {% for b in body %}
+        <li>Author: {{ b.autor }} Item: {{ b.noticia }}  Date: {{ b.fecha }} Link:  <a href="{{ b.link }}">{{ b.link }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Listado de micronoteros -->
+
+{% if micronoteros %}
+
+	<h1>Blogger's List</h1>
+
+    {% for u in micronoteros %}
+        <li>Blogger:  <a href="http://localhost:1234/noteros/{{ u.micronotero }}">{{ u.micronotero }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Listado de micronoteros con la posibilidad de borrar -->
+
+{%if todosmicronoteros %}
+
+
+	<h1>List of bloggers who follow {{ user }}</h1>
+    {% for u in micronoterosaut %}
+        <li>My Blogger:  <a href="http://identi.ca/{{ u.micronotero }}">{{ u.micronotero }}</a></li>
+    {% endfor %}
+
+	<h3>If you want to follow another blogger, you can choose one of the next list or you can put his/her name on the form.</h3>
+    {% for v in todosmicronoteros %}
+        <li>Bloggers suggestions:  <a href="http://identi.ca/{{ v.micronotero }}">{{ v.micronotero }}</a></li>
+    {% endfor %}
+	
+
+	<form action="/micronoteros" method="post">
+        <p>I want to delete: <input type="text" name="deleteuser"></p>
+        <p>I want to follow: <input type="text" name="followuser"></p>
+      <input type="submit" value="Reconfigura mis micronoteros">
+    </form>
+
+
+
+{% endif %}
+
+
+
+<!-- Listado de las micronotas de un micronotero -->
+
+{% if micronotas %}
+
+
+
+	{% if micronotero %}
+		<h1>  News Items of {{ micronotero }}  </h1>
+	{% endif %}
+
+
+    {% for m in micronotas %}
+        <li>Item: {{ m.noticia }}  Date: {{ m.fecha }} Link:  <a href="{{ m.link }}">{{ m.link }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+
+<!-- Listado de usuarios -->
+
+{% if usuarios %}
+
+	<h1>User's List</h1>
+
+    {% for l in usuarios %}
+        <li>User:  <a href="http://localhost:1234/usuarios/{{ l.username }}">{{ l.username }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Microresumen de las noticias q sigue el usuario -->
+
+{% if micronotasusuario %}
+
+
+
+	{% if usuario %}
+		<h1>  MicroSummary of {{ usuario }} user</h1>
+		<h3>  Rss Feed of {{ usuario }} in <a href="http://localhost:1234/usuarios/{{ usuario }}/feed">{{ usuario }}</a></h3>
+	{% endif %}
+
+
+    {% for n in micronotasusuario %}
+        <li>Author: {{ n.autor }} Item: {{ n.noticia }}  Date: {{ n.fecha }} Link:  <a href="{{ n.link }}">{{ n.link }}</a></li>
+    {% endfor %}
+
+
+
+{% endif %}
+
+
+
+
+
+
+{% endblock %}
+
+
+<!-- Firma y fecha de la página -->
+<address>Design by<br>
+   Javier Suela Plaza.</address>
+
+</body>
+</html>

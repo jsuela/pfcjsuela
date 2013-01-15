@@ -1,0 +1,68 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <title>Mi Resumen</title>
+  <link rel="stylesheet" type="text/css" href="/css/miestilo.css"  /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="indice.html">Página principal</a>
+  <li><a href="meditaciones.html">Meditaciones</a>
+  <li><a href="ciudad.html">Mi ciudad</a>
+  <li><a href="enlaces.html">Enlaces</a>
+</ul>
+
+<!-- Contenido principal -->
+<h1>Mi Resumen</h1>
+
+{% block content %}
+	{%ifnotequal username ''%}
+    	<p>Usuario: {{ username }}</p>
+	{%else%}
+		<p>{{ username }}</p>
+	{%endifnotequal%}
+
+{% if body %}
+
+	{% for key, value in body.items %}
+    	<li>{{ key }}: {{ value }}</li>
+	{% endfor %}
+
+
+{% else %}
+    <p>No Micronotas para este Usuario.</p>
+{% endif %}
+
+
+
+
+
+{% endblock %}
+
+<p>¡Bienvenido a mi primera página con estilo!</p>
+
+<p>No tiene imágenes, pero tiene estilo.
+También tiene enlaces, aunque no te lleven a
+ningún sitio…</p>
+
+<p>Debería haber más cosas aquí, pero todavía no sé
+qué poner.</p>
+
+<!-- Firma y fecha de la página, ¡sólo por cortesía! -->
+<address>Creada el 19 de Diciembre<br>
+  por Javier Suela Plaza.</address>
+
+</body>
+</html>
+

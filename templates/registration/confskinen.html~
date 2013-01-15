@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+  <title>Mi Summary</title>
+  <link rel="stylesheet" type="text/css" href="/cses" /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="/">Home</a>
+  <li><a href="/noteros">Blogger's List</a>
+  <li><a href="/usuarios">User's List</a>
+  <li><a href="/conf">Account Settings</a>
+  <li><a href="/micronoteros">My bloggers</a>
+  <li><a href="/update">Update</a>
+  <li><a href="/logout">Logout</a>
+</ul>
+
+
+<!-- Contenido principal -->
+
+{% block content %}
+
+{% csrf_token %}
+
+<html>
+<body>
+
+	<h3>You can form your CSS:</h3>
+	<form action="/conf/skin" method="post">
+		<textarea cols="60" rows="30" name="cssnuevo" >{{ css }}</textarea>
+ 
+{% if cssusuarios %}
+
+	<h3>Or you can copy the CSS of another user, you only have to write the name in the next form:</h3>
+        <p>I want to copy the CSS of: <input type="text" name="user"></p>
+
+    {% for b in cssusuarios %}
+        <li>User: {{ b.usuario }} </li>
+    {% endfor %}
+
+
+{% endif %}
+       <input type="submit" value="Cambia Css">
+
+    </form>
+
+</body>
+</html></center>
+
+{% endblock %}
+

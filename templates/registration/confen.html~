@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+  <title>My Summary</title>
+  <link rel="stylesheet" type="text/css" href="/cses" /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="/">Home</a>
+  <li><a href="/noteros">Blogger's List</a>
+  <li><a href="/usuarios">User's List</a>
+  <li><a href="/conf">Account Settings</a>
+  <li><a href="/micronoteros">My bloggers</a>
+  <li><a href="/update">Update</a>
+  <li><a href="/logout">Logout</a>
+</ul>
+
+<!-- Contenido principal -->
+
+
+
+{% block content %}
+
+
+
+
+{% csrf_token %}
+
+
+	<h1>Account Settings</h1>
+<h3>To configure your Css click here:<form action="/conf/skin" method="get"><input type="submit" value="Conf. CSS"></form></h3>	
+
+<h3>To configure your profile, fill the form and click config: </h3>
+
+	<form action="/conf" method="post">
+        <p>Public Name: <input type="text" name="user"></p>
+        <p>New Password: <input type="password" name="password"></p>
+        <p>Enter your new Password again: <input type="password" name="password2"></p>
+        <p>Language(en o es): <input type="text" name="idioma"></p>
+        <input type="submit" value="config">
+    </form>
+</body>
+</html></center>
+
+{% endblock %}
+
+

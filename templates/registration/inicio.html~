@@ -1,0 +1,139 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+  <meta http-equiv=Content-Type content=text/html; charset=utf-8 />
+  <title>Mi Resumen</title>
+  <link rel="stylesheet" type="text/css" href="/css/miestilo.css"  /> 
+
+
+</head>
+
+<body>
+
+<div class="logotipo">
+	<a href="/"><img src="/imagen/banner.jpg" width="245" height="150"></a>
+</div>
+
+
+<!-- Menú de navegación del sitio -->
+<ul class="navbar">
+  <li><a href="/">Inicio</a>
+  <li><a href="/login">Login</a>
+  <li><a href="/signin">Signin</a>
+  <li><a href="/noteros">Lista Noteros</a>
+  <li><a href="/usuarios">Lista Usuarios</a>
+</ul>
+
+<!-- Contenido principal -->
+
+
+{% block content %}
+
+
+
+
+{% if error %}
+
+	<h3> {{ error }} </h3>	
+
+{% endif %}
+
+
+<!-- Para el listado de las ultimas 50 -->
+{% if body %}
+
+	<h1>Línea Temporal Pública</h1>
+
+    {% for b in body %}
+        <li>Autor: {{ b.autor }} Noticia: {{ b.noticia }}  Fecha: {{ b.fecha }} Enlace:  <a href="{{ b.link }}">{{ b.link }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Listado de micronoteros -->
+
+{% if micronoteros %}
+
+	<h1>Listado de Micronoteros</h1>
+
+    {% for u in micronoteros %}
+        <li>Micronotero:  <a href="http://localhost:1234/noteros/{{ u.micronotero }}">{{ u.micronotero }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Listado de las micronotas de un micronotero -->
+
+{% if micronotas %}
+
+
+
+	{% if micronotero %}
+		<h1>  Micronotas de {{ micronotero }}  </h1>
+	{% endif %}
+
+
+    {% for m in micronotas %}
+        <li>Noticia: {{ m.noticia }}  Fecha: {{ m.fecha }} Enlace:  <a href="{{ m.link }}">{{ m.link }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+
+<!-- Listado de usuarios -->
+
+{% if usuarios %}
+
+	<h1>Listado de Usuarios</h1>
+
+    {% for l in usuarios %}
+        <li>Usuario:  <a href="http://localhost:1234/usuarios/{{ l.username }}">{{ l.username }}</a></li>
+    {% endfor %}
+
+
+{% endif %}
+
+<!-- Microresumen de las noticias q sigue el usuario -->
+
+{% if micronotasusuario %}
+		{% if usuario %}
+			<h1>  MicroResumen del usuario {{ usuario }}  </h1>
+			<h3>  Canal Rss de {{ usuario }} en <a href="http://localhost:1234/usuarios/{{ usuario }}/feed">{{ usuario }}</a></h3>
+		{% endif %}
+
+	{%ifnotequal error ''%}
+
+    	{% for n in micronotasusuario %}
+        	<li>Autor: {{ n.autor }} Noticia: {{ n.noticia }}  Fecha: {{ n.fecha }} Enlace:  <a href="{{ n.link }}">{{ n.link }}</a></li>
+    	{% endfor %}
+
+    	
+	{%else%}
+		<h3>{{ error }}</h3>
+	{%endifnotequal%}
+
+
+
+
+
+{% endif %}
+
+
+
+
+
+
+{% endblock %}
+
+
+<!-- Firma y fecha de la página -->
+<address>Creada el 19 de Diciembre<br>
+  por Javier Suela Plaza.</address>
+
+</body>
+</html>
+

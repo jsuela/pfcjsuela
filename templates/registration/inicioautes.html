@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>PreguntaRus</title>
+<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+<link href=/cses rel="stylesheet" type="text/css" media="screen" />
+</head>
+<body>
+<div id="wrapper">
+	<div id="header-wrapper">
+		<div id="header">
+			<div id="logo">
+				<h1><a href="#">Pregunta'R'us </a></h1>
+				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">X</a></p>
+			</div>
+		</div>
+	</div>
+	<!-- end #header -->
+	<div id="menu">
+		<ul class="nav">
+			<li class="current_page_item"><a href="/home">Ranking</a></li>
+			<li><a href="#">Mis preguntas</a>
+				<ul>
+					{% if profesor %}
+						<li><a href="/mispreguntas1">Nueva pregunta</a></li>
+						<li><a href="/mispreguntas2">Todas</a></li>
+					{% else %}
+						<li><a href="/mispreguntas1">Pendientes</a></li>
+						<li><a href="/mispreguntas2">Respondidas</a></li>
+					{% endif %}
+
+				</ul>
+			</li>
+			<li><a href="/conf">Configurar</a></li>
+			<li><a href="/contact">Contactar</a></li>
+			<li><a href="/logout">Cerrar Sesión</a></li>
+		</ul>
+	</div>
+	<!-- end #menu -->
+	<div id="page">
+		<div id="page-bgtop">
+			<div id="page-bgbtm">
+				<div id="content">
+					<div class="post">
+
+
+						<div class="entry">
+							<p>
+
+
+								{% block content %}
+
+								{% if user %}
+									<h1>¡Hola, {{ user }}!</h1>
+								{% else %}
+									<h2>Bienvenido, usuario. Por favor logueate.</h2>
+								{% endif %}
+
+								<!-- Para el caso de que haya error o exito -->
+								{% if error %}
+
+
+									<h3> {{ error }} </h3>	
+
+								{% endif %}
+
+								{% if exito %}
+
+
+									<h3> {{ exito }} </h3>	
+
+								{% endif %}
+
+
+
+
+
+								<!-- Para el ranking -->
+								{% if ranking %}
+
+									<h2>Ranking compañeros</h2>
+									{% for r in ranking %}
+										<li><h3>{{ r.usuario }}</h3></li>
+										<h4>Puntos: {{ r.puntos }}</h4></li>
+									{% endfor %}
+								{% else %}
+									<h2>No hay puntuaciones para mostrar</h2>
+
+								{% endif %}
+
+
+								{% endblock %}
+
+
+
+
+							</p>
+							
+						</div>
+					</div>
+
+					
+					<div style="clear: both;">&nbsp;</div>
+				</div>
+				<!-- end #content -->
+				<div id="sidebar">
+					<ul>
+						<li>
+							<h2>Asignatura X</h2>
+							<p>Bla bla bla bla blabla blabla blabla blabla blabla blabla blabla blabla bla</p>
+						</li>
+						<li>
+							<h2>Enlaces</h2>
+							<ul>
+								<li><a href="http://docencia.etsit.urjc.es/moodle/">Moodle</a></li>
+								<li><a href="https://twitter.com/urjc_sat/">Twitter X</a></li>
+								<li><a href="https://play.google.com/store?hl=es">Enlace App</a></li>
+							</ul>
+						</li>
+
+						<li>
+							<h2>Twitter</h2>
+							<ul>
+
+
+								<script charset="utf-8" src="http://widgets.twimg.com/j/2/widget.js"></script>
+								<script>
+								new TWTR.Widget({
+								  version: 2,
+								  type: 'profile',
+								  rpp: 4,
+								  interval: 30000,
+								  width: 250,
+								  height: 300,
+								  theme: {
+									shell: {
+									  background: '#b8afb8',
+									  color: '#050505'
+									},
+									tweets: {
+									  background: '#f5edf5',
+									  color: '#030303',
+									  links: '#f70830'
+									}
+								  },
+								  features: {
+									scrollbar: false,
+									loop: false,
+									live: false,
+									behavior: 'all'
+								  }
+								}).render().setUser('urjc_sat').start();
+								</script>
+
+
+							</ul>
+						</li>
+
+					</ul>
+				</div>
+				<!-- end #sidebar -->
+				<div style="clear: both;">&nbsp;</div>
+			</div>
+		</div>
+	</div>
+	<!-- end #page -->
+</div>
+<div id="footer">
+	<p>Copyright (c) 2011 Sitename.com. All rights reserved.</p>
+</div>
+<!-- end #footer -->
+</body>
+</html>
