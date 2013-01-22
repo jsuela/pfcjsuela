@@ -29,6 +29,8 @@ class PreguntasRespondidas(models.Model):
 class Puntuaciones(models.Model):
 	usuario=models.TextField()
 	puntos=models.IntegerField()
+	preguntaextra=models.IntegerField()
+	preguntaobligada=models.IntegerField()
 
 class PreguntasVisibles(models.Model):
 	usuario_pendiente=models.TextField()
@@ -36,6 +38,10 @@ class PreguntasVisibles(models.Model):
 	respuesta=models.TextField()
 	respuesta2=models.TextField()
 	respuesta3=models.TextField()
+
+class Tips(models.Model):
+	leccion=models.TextField()
+	fecha=models.DateTimeField()
 
 	
 

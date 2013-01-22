@@ -30,7 +30,7 @@
 						<li class="current_page_item"><a href="/mispreguntas1">Nueva pregunta</a></li>
 						<li><a href="/mispreguntas2">Todas</a></li>
 					{% else %}
-						<li><a href="/mispreguntas1">Pendientes</a></li>
+						<li class="current_page_item"><a href="/mispreguntas1">Pendientes</a></li>
 						<li><a href="/mispreguntas2">Respondidas</a></li>
 					{% endif %}
 

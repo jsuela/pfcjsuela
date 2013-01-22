@@ -24,20 +24,28 @@
 	<div id="menu">
 		<ul class="nav">
 			<li><a href="/home">Ranking</a></li>
-			<li><a href="#">Mis preguntas</a>
+			<li class="current_page_item"><a href="#">Mis preguntas</a>
 				<ul>
 					{% if profesor %}
-						<li class="current_page_item"><a href="/mispreguntas1">Nueva pregunta</a></li>
-						<li><a href="/mispreguntas2">Todas</a></li>
+						<li><a href="/mispreguntas1">Nueva pregunta</a></li>
+						<li class="current_page_item"><a href="/mispreguntas2">Todas</a></li>
 					{% else %}
 						<li><a href="/mispreguntas1">Pendientes</a></li>
-						<li><a href="/mispreguntas2">Respondidas</a></li>
+						<li class="current_page_item"><a href="/mispreguntas2">Respondidas</a></li>
 					{% endif %}
 
 				</ul>
 			</li>
 			<li><a href="/conf">Configurar</a></li>
-			<li><a href="/contact">Contactar</a></li>
+			<li><a href="/leccion">Mis lecciones</a>
+				<ul>
+					{% if profesor %}
+						<li><a href="/leccion/nueva">Nueva lección</a></li>
+						<li><a href="/leccion">Lecciones</a></li>
+					{% endif %}
+
+				</ul>
+			</li>
 			<li><a href="/logout">Cerrar Sesión</a></li>
 		</ul>
 	</div>

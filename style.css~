@@ -148,7 +148,8 @@ a:hover {
 	font-size: 20px;
 	margin: 0px;
 	text-decoration: none;
-	padding: 5px 45px 0px 30px;
+	/*altura sepa entre secciones del menu, ... */
+	padding: 5px 50px 0px 23px;
 	height: 35px;
 	border: none;
 	/*float: left;*/

@@ -25,8 +25,14 @@
 			<li><a href="/home">Ranking</a></li>
 			<li><a href="#">Mis preguntas</a>
 				<ul>
-					<li><a href="/mispreguntas/respondidas">Respondidas</a></li>
-					<li><a href="/mispreguntas/pendientes">Pendientes</a></li>
+					{% if profesor %}
+						<li><a href="/mispreguntas1">Nueva pregunta</a></li>
+						<li><a href="/mispreguntas2">Todas</a></li>
+					{% else %}
+						<li><a href="/mispreguntas1">Pendientes</a></li>
+						<li><a href="/mispreguntas2">Respondidas</a></li>
+					{% endif %}
+
 				</ul>
 			</li>
 			<li><a href="/conf">Configurar</a></li>

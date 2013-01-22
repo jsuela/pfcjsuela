@@ -22,7 +22,7 @@
 	<!-- end #header -->
 	<div id="menu">
 		<ul class="nav">
-			<li class="current_page_item"><a href="/home">Ranking</a></li>
+			<li><a href="/home">Ranking</a></li>
 			<li><a href="#">Mis preguntas</a>
 				<ul>
 					{% if profesor %}
@@ -36,7 +36,15 @@
 				</ul>
 			</li>
 			<li><a href="/conf">Configurar</a></li>
-			<li><a href="/contact">Contactar</a></li>
+			<li><a href="/leccion">Mis lecciones</a>
+				<ul>
+					{% if profesor %}
+						<li class="current_page_item"><a href="/leccion/nueva">Nueva lección</a></li>
+						<li><a href="/leccion">Lecciones</a></li>
+					{% endif %}
+
+				</ul>
+			</li>
 			<li><a href="/logout">Cerrar Sesión</a></li>
 		</ul>
 	</div>
@@ -47,59 +55,46 @@
 				<div id="content">
 					<div class="post">
 
-
 						<div class="entry">
+
 							<p>
 
 
 								{% block content %}
 
-								{% if user %}
-									<h1>¡Hola, {{ user }}!</h1>
-								{% else %}
-									<h2>Bienvenido, usuario. Por favor logueate.</h2>
-								{% endif %}
+										{% if profesor %}
+											{% if error %}
+												<h1> {{ error }}</h1> 
+												<h3><a href="javascript:history.back()">Volver atrás</h3>
+											{% elif exito %}
+												<h3> {{ exito }} <a href="/leccion/nueva">Volver atrás</a></h3>
 
-								<!-- Para el caso de que haya error o exito -->
-								{% if error %}
+											{% else %}
+												<h2>Introduzca una nueva lección</h2>
+												<form name=miformulario method="post" action="/leccion/nueva">{% csrf_token %}
+													<p>Lección: <input type="text" name="leccion"></p>
+													<input type="submit" value="cargar">
+												</form>
 
+ 											{% endif %}
 
-									<h3> {{ error }} </h3>	
+										{% elif alumno %}
+											{% if error %}
+												<h1> {{ error }}</h1> 
+ 											{% endif %}
+									
+										{% else %}
 
-								{% endif %}
-
-								{% if exito %}
-
-
-									<h3> {{ exito }} </h3>	
-
-								{% endif %}
-
-
-
-
-
-								<!-- Para el ranking -->
-								{% if ranking %}
-
-									<h2>Ranking compañeros</h2>
-									{% for r in ranking %}
-										<li><h3>{{ r.usuario }}</h3></li>
-										<h4>Puntos: {{ r.puntos }}</h4></li>
-									{% endfor %}
-								{% else %}
-									<h2>No hay puntuaciones para mostrar</h2>
-
-								{% endif %}
-
+												<p>Inicia sesión pinchando <a href="/login">aquí. </a></p>	
+	
+										{% endif %}
 
 								{% endblock %}
 
 
 
-
 							</p>
-							
+
 						</div>
 					</div>
 
@@ -122,44 +117,6 @@
 							</ul>
 						</li>
 
-						<li>
-							<h2>Twitter</h2>
-							<ul>
-
-
-								<script charset="utf-8" src="http://widgets.twimg.com/j/2/widget.js"></script>
-								<script>
-								new TWTR.Widget({
-								  version: 2,
-								  type: 'profile',
-								  rpp: 4,
-								  interval: 30000,
-								  width: 250,
-								  height: 300,
-								  theme: {
-									shell: {
-									  background: '#b8afb8',
-									  color: '#050505'
-									},
-									tweets: {
-									  background: '#f5edf5',
-									  color: '#030303',
-									  links: '#f70830'
-									}
-								  },
-								  features: {
-									scrollbar: false,
-									loop: false,
-									live: false,
-									behavior: 'all'
-								  }
-								}).render().setUser('urjc_sat').start();
-								</script>
-
-
-							</ul>
-						</li>
-
 					</ul>
 				</div>
 				<!-- end #sidebar -->
@@ -170,7 +127,7 @@
 	<!-- end #page -->
 </div>
 <div id="footer">
-	<p>Copyright (c) 2011 Sitename.com. All rights reserved.</p>
+	<p>Copyright (c) 2012. All rights reserved.</p>
 </div>
 <!-- end #footer -->
 </body>

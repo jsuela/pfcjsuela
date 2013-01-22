@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles
+from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips
 from django.core.context_processors import csrf
 from django.contrib.auth import authenticate
 
@@ -12,11 +12,14 @@ from django.template import Context, RequestContext
 from django.utils import simplejson
 from django.core import serializers
 
+from datetime import datetime
+
 #-------------------------------------------------------------------------------
 #mostraremos el ranking
 #-------------------------------------------------------------------------------
 
 def home(request):
+
 	template = get_template("registration/inicioautes.html")
 	if request.user.is_authenticated():
 		usuario=request.user.username
@@ -100,7 +103,7 @@ def signin(request):
 						user = User.objects.create_user(username,email,password)
 						user.save()
 						#añadimos a la tabla de puntuaciones
-						puntuaciones= Puntuaciones(usuario=username, puntos=0);
+						puntuaciones= Puntuaciones(usuario=username, puntos=0, preguntaextra=0, preguntaobligada=0);
 						puntuaciones.save()
 
 						#añadimos las preguntas existentes al nuevo usuario para que disponga de todas
@@ -317,10 +320,86 @@ def conf(request):
 	else:
 		return HttpResponseRedirect('/login')
 
+#-------------------------------------------------------------------------------
+#Tanto si es alumno como profesor devuelve la lista de lecciones
+#-------------------------------------------------------------------------------
+
+def leccion(request):
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	if request.user.is_authenticated():
+		template = get_template("registration/formulario2.html")
+		usuario=request.user.username
+		#si es staff, por si añadimos nueva funcionalidad, por ahora es como si fuese un alumno
+		if request.user.is_staff:
+			if request.method=='GET':
+				listado=Tips.objects.all()
+				listado=listado.extra(order_by = ['-fecha'])
+				return render_to_response('registration/leccion.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
+			#si no es GET muestro error
+			else:
+				return render_to_response('registration/leccion.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
+		#si es alumno
+		else:
+			try:
+				listado=Tips.objects.all()
+				listado=listado.extra(order_by = ['-fecha'])
+			except PreguntasRespondidas.DoesNotExist:
+				listado=''
+			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
+	else:
+		return HttpResponseRedirect('/login')
 
 #-------------------------------------------------------------------------------
-#							ANDROID
+#Si es alumno devuelve las lecciones
+#si es profesor formulario para añadir lecciones
 #-------------------------------------------------------------------------------
+
+def leccionnueva(request):
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	if request.user.is_authenticated():
+		template = get_template("registration/leccionnueva.html")
+		usuario=request.user.username
+		#si es staff
+		if request.user.is_staff:
+			#si es profesor mostrará el formulario
+			if request.method=='GET':
+				return render_to_response('registration/leccionnueva.html', {'profesor':usuario}, context_instance=RequestContext(request))
+			if request.method == "POST":
+				leccion=request.POST['leccion']
+
+				if (leccion==''):
+					formFail= "Error! la lección está en blanco"
+					return render_to_response('registration/leccionnueva.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
+				else:
+					fecha=datetime.now()
+					record=Tips(leccion=leccion, fecha= fecha)
+					record.save()
+
+					form = "Tu lección se ha almacenado."
+					return render_to_response('registration/leccionnueva.html', {'profesor':usuario,'exito':form}, context_instance=RequestContext(request))   
+			#si no es ni GET ni POST
+			else:
+				return render_to_response('registration/leccionueva.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
+		#si es alumno
+		else:
+			return render_to_response('registration/leccionnueva.html', {'alumno':usuario,'error':"No tiene acceso"}, context_instance=RequestContext(request))   
+	#si no esta autenticado
+	else:
+		return HttpResponseRedirect('/login')
+
+
+
+
+
+################################################################################
+#------------------------------------------------------------------------------#
+#							ANDROID											   #
+#------------------------------------------------------------------------------#
+################################################################################
 
 #-------------------------------------------------------------------------------
 #Login
@@ -469,8 +548,57 @@ def androidsumapregunta(request, usuario):
 		record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
 		record.save()
 
+		#le incrementamos el contador de preguntas obligadas
+		pobligada=Puntuaciones.objects.get(usuario=user)
+		pobligada.preguntaobligada=pobligada.preguntaobligada+1
+		pobligada.save()
+
+
 		return HttpResponse("ok")
 	except:
 		return HttpResponse("fail")
+
+#-------------------------------------------------------------------------------
+#devuelve el listado de lecciones para los alumnos
+#-------------------------------------------------------------------------------
+
+def androidtips(request):
+
+	l=Tips.objects.all()
+	l=l.extra(order_by = ['-fecha'])
+	data = serializers.serialize("json",l, fields=('leccion'))
+	return HttpResponse("{\"tips\":"+data+"}")
+
+#-------------------------------------------------------------------------------
+#añade una pregunta extra para responder al usuario y le suma 1 a preguntaextra
+#-------------------------------------------------------------------------------
+
+def androidpreguntaextra(request, usuario):
+
+	user= usuario
+	try:
+		p = PreguntasPendientes.objects.filter(usuario_pendiente=user)
+	
+		usuario_pendiente = p[0].usuario_pendiente
+		pregunta = p[0].pregunta
+		respuesta= p[0].respuesta
+		respuesta2= p[0].respuesta2
+		respuesta3= p[0].respuesta3
+		p[0].delete()
+
+
+		record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
+		record.save()
+
+		#le incrementamos el contador de preguntas extras
+		pextra=Puntuaciones.objects.get(usuario=user)
+		pextra.preguntaextra=pextra.preguntaextra+1
+		pextra.save()
+
+		return HttpResponse("ok")
+	except:
+		return HttpResponse("fail")
+
+
 
 			

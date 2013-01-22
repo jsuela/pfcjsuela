@@ -20,14 +20,19 @@ urlpatterns = patterns('',
 	url(r'^contact', 'pfcapp.views.contact', name='contact'),
 	url(r'^mispreguntas1', 'pfcapp.views.mispreguntas1', name='mispreguntas1'),
 	url(r'^mispreguntas2', 'pfcapp.views.mispreguntas2', name='mispreguntas2'),
+	url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
+	url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
+
 
 	#android
 	url(r'^android/login', 'pfcapp.views.androidlogin', name='androidlogin'),
 	url(r'^android/enviarespuestas', 'pfcapp.views.androidenviarespuestas', name='androidenviarespuestas'),
 	url(r'^android/sumapregunta/(?P<usuario>.*)$', 'pfcapp.views.androidsumapregunta', name='androidsumapregunta'),
+	url(r'^android/preguntaextra/(?P<usuario>.*)$', 'pfcapp.views.androidpreguntaextra', name='androidpreguntaextra'),
 	url(r'^android/pidepreguntas/(?P<usuario>.*)$', 'pfcapp.views.androidpidepreguntas', name='androidpidepreguntas'),
 	url(r'^android/listacorrectas/(?P<usuario>.*)$', 'pfcapp.views.androidlistacorrectas', name='androidlistacorrectas'),
 	url(r'^android/clasificacion', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
+	url(r'^android/tips', 'pfcapp.views.androidtips', name='androidtips'),
 
 
 	url(r'^accounts/profile/','pfcapp.views.home', name='home'),
