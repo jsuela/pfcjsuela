@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>PreguntaRus</title>
+<link href='http://fonts.googleapis.com/css?family=Nova+Mono' rel='stylesheet' type='text/css'>
+<link href=/cses rel="stylesheet" type="text/css" media="screen" />
+</head>
+<body>
+<div id="wrapper">
+	<div id="header-wrapper">
+		<div id="header">
+			<div id="logo">
+				<h1><a href="#">Pregunta'R'us </a></h1>
+				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">X</a></p>
+			</div>
+		</div>
+	</div>
+	<!-- end #header -->
+	<div id="menu">
+		<ul class="nav">
+			<li><a href="/home">Ranking</a></li>
+			<li><a href="#">Mis preguntas</a>
+				<ul>
+					{% if profesor %}
+						<li><a href="/mispreguntas1">Nueva pregunta</a></li>
+						<li><a href="/mispreguntas2">Todas</a></li>
+					{% else %}
+						<li><a href="/mispreguntas1">Pendientes</a></li>
+						<li><a href="/mispreguntas2">Respondidas</a></li>
+					{% endif %}
+
+				</ul>
+			</li>
+			<li class="current_page_item"><a href="/conf">Configurar</a></li>
+			<li><a href="/leccion">Mis lecciones</a>
+				<ul>
+					{% if profesor %}
+						<li><a href="/leccion/nueva">Nueva lección</a></li>
+						<li><a href="/leccion">Lecciones</a></li>
+					{% endif %}
+
+				</ul>
+			</li>
+			<li><a href="/logout">Cerrar Sesión</a></li>
+		</ul>
+	</div>
+	<!-- end #menu -->
+	<div id="page">
+		<div id="page-bgtop">
+			<div id="page-bgbtm">
+				<div id="content">
+					<div class="post">
+
+						<div class="entry">
+
+							{% block content %}
+
+								{% if error %}
+									<h1>{{error}}</h3>
+									<h3><a href="javascript:history.back()">Volver atrás</h3>
+								{% elif exito %}
+									<h3> {{ exito }} <a href="/pruebagcm">Volver atrás</a></h3>
+								{% else %}
+
+								<form method="post" action="/pruebagcm">
+									{% csrf_token %}
+									<h3>{{user}}</h3>
+									<p>Usuario a enviar: <input type="text" name="user"></p>
+									<input type="submit" value="Enviar notif">
+								</form>
+								{% endif %}
+
+								
+							{% endblock %}
+						</div>
+					</div>
+
+					
+					<div style="clear: both;">&nbsp;</div>
+				</div>
+				<!-- end #content -->
+				<div id="sidebar">
+					<ul>
+						<li>
+							<h2>Asignatura X</h2>
+							<p>Bla bla bla bla blabla blabla blabla blabla blabla blabla blabla blabla bla</p>
+						</li>
+						<li>
+							<h2>Enlaces</h2>
+							<ul>
+								<li><a href="http://docencia.etsit.urjc.es/moodle/">Moodle</a></li>
+								<li><a href="https://twitter.com/urjc_sat/">Twitter X</a></li>
+								<li><a href="https://play.google.com/store?hl=es">Enlace App</a></li>
+							</ul>
+						</li>
+
+					</ul>
+				</div>
+				<!-- end #sidebar -->
+				<div style="clear: both;">&nbsp;</div>
+			</div>
+		</div>
+	</div>
+	<!-- end #page -->
+</div>
+<div id="footer">
+	<p>Copyright (c) 2012. All rights reserved.</p>
+</div>
+<!-- end #footer -->
+</body>
+</html>

@@ -31,6 +31,8 @@ class Puntuaciones(models.Model):
 	puntos=models.IntegerField()
 	preguntaextra=models.IntegerField()
 	preguntaobligada=models.IntegerField()
+	preguntarecibidaamistosa=models.IntegerField()
+	preguntaenviadaamistosa=models.IntegerField()
 
 class PreguntasVisibles(models.Model):
 	usuario_pendiente=models.TextField()
@@ -38,10 +40,17 @@ class PreguntasVisibles(models.Model):
 	respuesta=models.TextField()
 	respuesta2=models.TextField()
 	respuesta3=models.TextField()
+	#puede ser: obligada, extra, amistosa
+	tag=models.TextField()
 
 class Tips(models.Model):
 	leccion=models.TextField()
 	fecha=models.DateTimeField()
+
+class CodigosGCM(models.Model):
+	usuario=models.TextField()
+	codigoGCM=models.TextField()
+
 
 	
 

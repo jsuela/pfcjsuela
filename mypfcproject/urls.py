@@ -22,6 +22,7 @@ urlpatterns = patterns('',
 	url(r'^mispreguntas2', 'pfcapp.views.mispreguntas2', name='mispreguntas2'),
 	url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
 	url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
+	url(r'^pruebagcm', 'pfcapp.views.pruebagcm', name='pruebagcm'),
 
 
 	#android
@@ -33,6 +34,14 @@ urlpatterns = patterns('',
 	url(r'^android/listacorrectas/(?P<usuario>.*)$', 'pfcapp.views.androidlistacorrectas', name='androidlistacorrectas'),
 	url(r'^android/clasificacion', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
 	url(r'^android/tips', 'pfcapp.views.androidtips', name='androidtips'),
+	url(r'^android/enviapreguntaextra/(?P<emisor>.*)/(?P<receptor>.*)$', 'pfcapp.views.androidenviapreguntaextra', name='androidenviapreguntaextra'),
+
+
+
+	url(r'^android/gcm/registro', 'pfcapp.views.androidgcmregistrocliente', name='androidgcmregistrocliente'),
+
+
+
 
 
 	url(r'^accounts/profile/','pfcapp.views.home', name='home'),
