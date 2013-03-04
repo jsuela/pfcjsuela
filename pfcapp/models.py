@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 class PreguntasCompletas(models.Model):
 	#falta poner el primary key a pregunta para que no se repitan
 	#usuario_pendiente=models.TextField()
-	pregunta=models.TextField()
+	pregunta=models.TextField(primary_key=True)
 	respuesta=models.TextField()
 	respuesta1_correcta=models.TextField()
 	respuesta2=models.TextField()

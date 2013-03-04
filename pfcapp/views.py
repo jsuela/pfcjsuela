@@ -206,7 +206,7 @@ def mispreguntas1(request):
 			if request.method=='GET':
 				return render_to_response('registration/formulario1.html', {'profesor':usuario}, context_instance=RequestContext(request))
 			if request.method == "POST":
-				pregunta=request.POST['pregunta']
+				pregunta1=request.POST['pregunta']
 				respuesta=request.POST['respuesta']
 				respuesta1_correcta=request.POST['respuesta1_correcta']
 				respuesta2=request.POST['respuesta2']
@@ -229,18 +229,32 @@ def mispreguntas1(request):
 				else:
 
 					Usuarios= User.objects.all()
-			
-					record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta)
-					record.save()
+					
 
-					for i in Usuarios:
-						usuario_pendiente = i.username
+					#compruebo si ya esxitia la pregunta, si exsitia doy error, si no, almaceno
+					try:
+						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta1)
+						#if (str(pexiste.pregunta)!=str("")):
+					except PreguntasCompletas.DoesNotExist:
+						#almaceno
+						record=PreguntasCompletas(pregunta=pregunta1,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta)
+						record.save()
+						for i in Usuarios:
+							usuario_pendiente = i.username
 				
-						record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
-						record2.save()
+							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta1,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
+							record2.save()
 
-					form = "Tu pregunta se ha almacenado."
-					return render_to_response('registration/formulario1.html', {'profesor':usuario,'exito':form}, context_instance=RequestContext(request))   
+						form = "Tu pregunta se ha almacenado."
+						return render_to_response('registration/formulario1.html', {'profesor':usuario,'exito':form}, context_instance=RequestContext(request)) 
+
+					#si ya se habia alamacenado la pregunta anteriormente aviso del error
+					formFail= "Error! La pregunta ya existe"
+					return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
+
+
+
+						  
 			#si no es ni GET ni POST
 			else:
 				return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
@@ -495,6 +509,10 @@ def pruebagcm(request):
 		return HttpResponseRedirect('/login')
 
 
+def xxx(request):
+
+	return HttpResponse("hola rawan")
+
 
 ################################################################################
 #------------------------------------------------------------------------------#
@@ -574,17 +592,17 @@ def androidenviarespuestas(request):
 		if escorrecta == "true":
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos+1
-			elif tipoPregunta=="amistosa":
-				usuario_puntos.puntos=usuario_puntos.puntos+0
 			elif tipoPregunta=="extra":
 				usuario_puntos.puntos=usuario_puntos.puntos+2
+			else:
+				usuario_puntos.puntos=usuario_puntos.puntos+0
 		else:
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos-1
-			elif tipoPregunta=="amistosa":
-				usuario_puntos.puntos=usuario_puntos.puntos-5
 			elif tipoPregunta=="extra":
 				usuario_puntos.puntos=usuario_puntos.puntos-1
+			else:
+				usuario_puntos.puntos=usuario_puntos.puntos-5
 			
 		usuario_puntos.save()
 
@@ -755,9 +773,12 @@ def androidenviapreguntaextra(request, emisor, receptor):
 
 		u=CodigosGCM.objects.get(usuario=receptor)
 		codigogcm = u.codigoGCM
+		print codigogcm
 		#si existe el receptor, le hago llegar la notificacion
-
-		#para ello mando post a GCMServer 
+	except:
+		statusGCM="fail"
+	#para ello mando post a GCMServer 
+	if (statusGCM!="fail"):
 		form_fields = {
 			"registration_id": codigogcm,#poner el del movil a enviar,
 			"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
@@ -768,16 +789,19 @@ def androidenviapreguntaextra(request, emisor, receptor):
 		#puerto por defecto para protocolo https 443
 		conn = httplib.HTTPSConnection("android.googleapis.com", 443)
 		conn.request("POST", "/gcm/send", form_data, headers)
+		try:
+			response = conn.getresponse()
+			print response.status
+			#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
+			data = response.read()
+			print "hola data!*************"
+			print data
+			conn.close()
+			statusGCM="ok"
+		except:
+			statusGCM="noRed"
 
-		response = conn.getresponse()
-		print response.status
-		#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
-		data = response.read()
-		print data
-		conn.close()
-		statusGCM="ok"
-	except:
-		statusGCM="fail"
+
 
 	#si no se ha dado de alta el usuario en GCM no añadirle la pregunta
 	if (statusGCM == "ok"):
@@ -793,7 +817,7 @@ def androidenviapreguntaextra(request, emisor, receptor):
 			p[0].delete()
 
 
-			record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="amistosa")
+			record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="amistosa enviada por "+emisor)
 			record.save()
 
 			#le incrementamos el contador de preguntas amistosas recibidas y 
@@ -810,8 +834,11 @@ def androidenviapreguntaextra(request, emisor, receptor):
 		except:
 			return HttpResponse("fail")
 
-	else:
+	elif (statusGCM == "fail"):
 		return HttpResponse("no_user")
+
+	elif (statusGCM == "noRed"):
+		return HttpResponse("no_red")
 		
 
 
