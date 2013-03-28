@@ -23,8 +23,15 @@ urlpatterns = patterns('',
 	url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
 	url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
 
+<<<<<<< HEAD
 	url(r'^pruebagrafica', 'pfcapp.views.pruebagrafica', name='pruebagrafica'),
+=======
+	#url(r'^pruebagrafica', 'pfcapp.views.pruebagrafica', name='pruebagrafica'),
+>>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 	url(r'^pruebagcm', 'pfcapp.views.pruebagcm', name='pruebagcm'),
+	url(r'^xxx', 'pfcapp.views.xxx', name='xxx'),
+
+
 
 
 
@@ -49,7 +56,7 @@ urlpatterns = patterns('',
 
 	url(r'^accounts/profile/','pfcapp.views.home', name='home'),
     url(r'^cses', 'pfcapp.views.cses', name='cses'),
-    (r'^imagen/(?P<path>.*)$', 'django.views.static.serve',
+    urls(r'^imagen/(?P<path>.*)$', 'django.views.static.serve',
           {'document_root': './sfiles/imagen'}), 
 
 )
