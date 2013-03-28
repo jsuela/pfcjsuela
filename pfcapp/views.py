@@ -206,7 +206,7 @@ def mispreguntas1(request):
 			if request.method=='GET':
 				return render_to_response('registration/formulario1.html', {'profesor':usuario}, context_instance=RequestContext(request))
 			if request.method == "POST":
-				pregunta1=request.POST['pregunta']
+				pregunta=request.POST['pregunta']
 				respuesta=request.POST['respuesta']
 				respuesta1_correcta=request.POST['respuesta1_correcta']
 				respuesta2=request.POST['respuesta2']
@@ -235,28 +235,16 @@ def mispreguntas1(request):
 
 					#compruebo si ya esxitia la pregunta, si exsitia doy error, si no, almaceno
 					try:
-<<<<<<< HEAD
 						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta)
 						#if (str(pexiste.pregunta)!=str("")):
 					except PreguntasCompletas.DoesNotExist:
 						#almaceno
 						record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta)
-=======
-						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta1)
-						#if (str(pexiste.pregunta)!=str("")):
-					except PreguntasCompletas.DoesNotExist:
-						#almaceno
-						record=PreguntasCompletas(pregunta=pregunta1,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta)
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 						record.save()
 						for i in Usuarios:
 							usuario_pendiente = i.username
 				
-<<<<<<< HEAD
 							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
-=======
-							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta1,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 							record2.save()
 
 						form = "Tu pregunta se ha almacenado."
@@ -266,16 +254,10 @@ def mispreguntas1(request):
 					formFail= "Error! La pregunta ya existe"
 					return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
 
-<<<<<<< HEAD
 
 
 
    
-=======
-
-
-						  
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 			#si no es ni GET ni POST
 			else:
 				return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
@@ -614,30 +596,18 @@ def androidenviarespuestas(request):
 		usuario_puntos=Puntuaciones.objects.get(usuario=usuario)
 		if escorrecta == "true":
 			if tipoPregunta=="obligada":
-<<<<<<< HEAD
 				usuario_puntos.puntos=usuario_puntos.puntos+2
 			elif tipoPregunta=="extra":
 				usuario_puntos.puntos=usuario_puntos.puntos+3
 			else:
 				usuario_puntos.puntos=usuario_puntos.puntos+1
-=======
-				usuario_puntos.puntos=usuario_puntos.puntos+1
-			elif tipoPregunta=="extra":
-				usuario_puntos.puntos=usuario_puntos.puntos+2
-			else:
-				usuario_puntos.puntos=usuario_puntos.puntos+0
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 		else:
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos-1
 			elif tipoPregunta=="extra":
 				usuario_puntos.puntos=usuario_puntos.puntos-1
 			else:
-<<<<<<< HEAD
 				usuario_puntos.puntos=usuario_puntos.puntos-2
-=======
-				usuario_puntos.puntos=usuario_puntos.puntos-5
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 			
 		usuario_puntos.save()
 
@@ -814,20 +784,12 @@ def androidenviapreguntaextra(request, emisor, receptor):
 		u=CodigosGCM.objects.get(usuario=receptor)
 		codigogcm = u.codigoGCM
 		print codigogcm
-<<<<<<< HEAD
 		statusGCM="ok"
 		#si existe el receptor, le hago llegar la notificacion
 	except:
 		statusGCM="fail"
 	if (statusGCM!="fail"):
 		#para ello mando post a GCMServer 
-=======
-		#si existe el receptor, le hago llegar la notificacion
-	except:
-		statusGCM="fail"
-	#para ello mando post a GCMServer 
-	if (statusGCM!="fail"):
->>>>>>> 2963ba7178edf568b63c80d65e72ad58a651def5
 		form_fields = {
 			"registration_id": codigogcm,#poner el del movil a enviar,
 			"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
