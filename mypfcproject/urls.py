@@ -22,7 +22,12 @@ urlpatterns = patterns('',
 	url(r'^mispreguntas2', 'pfcapp.views.mispreguntas2', name='mispreguntas2'),
 	url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
 	url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
+
+	#url(r'^pruebagrafica', 'pfcapp.views.pruebagrafica', name='pruebagrafica'),
 	url(r'^pruebagcm', 'pfcapp.views.pruebagcm', name='pruebagcm'),
+	url(r'^xxx', 'pfcapp.views.xxx', name='xxx'),
+
+
 
 
 	#android
@@ -46,7 +51,7 @@ urlpatterns = patterns('',
 
 	url(r'^accounts/profile/','pfcapp.views.home', name='home'),
     url(r'^cses', 'pfcapp.views.cses', name='cses'),
-    (r'^imagen/(?P<path>.*)$', 'django.views.static.serve',
+    url(r'^imagen/(?P<path>.*)$', 'django.views.static.serve',
           {'document_root': './sfiles/imagen'}), 
 
 )

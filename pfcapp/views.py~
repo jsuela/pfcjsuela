@@ -393,7 +393,7 @@ def leccionnueva(request):
 							form_fields = {
 								"registration_id": i.codigoGCM,#poner el del movil a enviar,
 								"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
-								"data.msg": "te ha llegado una lección",
+								"data.msg": "Te ha llegado una lección",
 							}
 							form_data = urllib.urlencode(form_fields)
 							headers={'Content-Type': 'application/x-www-form-urlencoded','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
@@ -494,6 +494,10 @@ def pruebagcm(request):
 	else:
 		return HttpResponseRedirect('/login')
 
+
+def xxx(request):
+
+	return HttpResponse("hola javi")
 
 
 ################################################################################
@@ -755,29 +759,34 @@ def androidenviapreguntaextra(request, emisor, receptor):
 
 		u=CodigosGCM.objects.get(usuario=receptor)
 		codigogcm = u.codigoGCM
+		print codigogcm
 		#si existe el receptor, le hago llegar la notificacion
-
-		#para ello mando post a GCMServer 
-		form_fields = {
-			"registration_id": codigogcm,#poner el del movil a enviar,
-			"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
-			"data.msg": "Te ha enviado una pregunta "+emisor,
-		}
-		form_data = urllib.urlencode(form_fields)
-		headers={'Content-Type': 'application/x-www-form-urlencoded','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
-		#puerto por defecto para protocolo https 443
-		conn = httplib.HTTPSConnection("android.googleapis.com", 443)
-		conn.request("POST", "/gcm/send", form_data, headers)
-
+	except:
+		statusGCM="fail"
+	#para ello mando post a GCMServer 
+	form_fields = {
+		"registration_id": codigogcm,#poner el del movil a enviar,
+		"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
+		"data.msg": "Te ha enviado una pregunta "+emisor,
+	}
+	form_data = urllib.urlencode(form_fields)
+	headers={'Content-Type': 'application/x-www-form-urlencoded','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
+	#puerto por defecto para protocolo https 443
+	conn = httplib.HTTPSConnection("android.googleapis.com", 443)
+	conn.request("POST", "/gcm/send", form_data, headers)
+	try:
 		response = conn.getresponse()
 		print response.status
 		#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
 		data = response.read()
+		print "hola data!*************"
 		print data
 		conn.close()
 		statusGCM="ok"
 	except:
-		statusGCM="fail"
+		statusGCM="noRed"
+
+
 
 	#si no se ha dado de alta el usuario en GCM no añadirle la pregunta
 	if (statusGCM == "ok"):
@@ -810,8 +819,11 @@ def androidenviapreguntaextra(request, emisor, receptor):
 		except:
 			return HttpResponse("fail")
 
-	else:
+	elif (statusGCM == "fail"):
 		return HttpResponse("no_user")
+
+	elif (statusGCM == "noRed"):
+		return HttpResponse("no_red")
 		
 
 
