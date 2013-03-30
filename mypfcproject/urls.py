@@ -40,6 +40,9 @@ urlpatterns = patterns('',
 	url(r'^android/clasificacion', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
 	url(r'^android/tips', 'pfcapp.views.androidtips', name='androidtips'),
 	url(r'^android/enviapreguntaextra/(?P<emisor>.*)/(?P<receptor>.*)$', 'pfcapp.views.androidenviapreguntaextra', name='androidenviapreguntaextra'),
+    url(r'^android/asignaturas/listado/(?P<usuario>.*)$', 'pfcapp.views.androidasignaturasusuario', name='androidasignaturasusuario'),
+    url(r'^android/asignaturas/listado', 'pfcapp.views.androidasignaturascompleto', name='androidasignaturascompleto'),
+    url(r'^android/asignaturas/matricula', 'pfcapp.views.androidasignaturasmatricula', name='androidasignaturasmatricula'),
 
 
 

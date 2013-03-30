@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM
+from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno
 from django.core.context_processors import csrf
 from django.contrib.auth import authenticate
 
@@ -161,6 +161,8 @@ def signinprofesor(request):
 					except User.DoesNotExist:
 						password=request.POST['password']
 						password2=request.POST['password2']
+						asignatura=request.POST['asignatura']
+
 
 						email=request.POST['email']
 						if (password=="") or (email==""):
@@ -177,6 +179,10 @@ def signinprofesor(request):
 							# staff solo para el profesor
 							user.is_staff = True
 							user.save()
+							
+							#almaceno también la asignatura que imparte dicho profesor
+							record=Asignaturas(asignatura=asignatura,profesor=username)
+							record.save()
 
 							sign = "Tu registro se ha realizado con éxito"
 							return render_to_response('registration/signinprofesor.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
@@ -238,13 +244,18 @@ def mispreguntas1(request):
 						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta)
 						#if (str(pexiste.pregunta)!=str("")):
 					except PreguntasCompletas.DoesNotExist:
+						#miro la asignatura del profesor
+						usuario=request.user.username
+						u=Asignaturas.objects.get(profesor=usuario)
+						asignatura = u.asignatura
+
 						#almaceno
-						record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta)
+						record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta, asignatura=asignatura)
 						record.save()
 						for i in Usuarios:
 							usuario_pendiente = i.username
 				
-							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
+							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, asignatura=asignatura)
 							record2.save()
 
 						form = "Tu pregunta se ha almacenado."
@@ -432,8 +443,13 @@ def leccionnueva(request):
 
 					#si no se ha dado de alta el usuario en GCM no añadirle la pregunta
 					if (statusGCM == "ok"):
+						#miro la asignatura del profesor
+						usuario=request.user.username
+						u=Asignaturas.objects.get(profesor=usuario)
+						asignatura = u.asignatura
+						
 						fecha=datetime.now()
-						record=Tips(leccion=leccion, fecha= fecha)
+						record=Tips(leccion=leccion, fecha= fecha, asignatura=asignatura)
 						record.save()
 
 						form = "Tu lección se ha almacenado y notificado a los alumnos"
@@ -663,10 +679,35 @@ def androidlistacorrectas(request, usuario):
 
 def androidclasificacion(request):
 
-	p=Puntuaciones.objects.all()
-	p=p.extra(order_by = ['-puntos'])
-	data = serializers.serialize("json",p, fields=('usuario','puntos'))
-	return HttpResponse("{\"puntos\":"+data+"}")
+	#p=Puntuaciones.objects.all()
+	#p=p.extra(order_by = ['-puntos'])
+	#data = serializers.serialize("json",p, fields=('usuario','puntos'))
+	#return HttpResponse("{\"puntos\":"+data+"}")
+
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	
+	if request.method == "POST":
+		
+		asignatura = request.POST['asignatura']
+		print asignatura
+		punt=Puntuaciones.objects.all()
+		print punt[0].usuario
+		#filtro por asignatura
+		punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
+		punt=punt.extra(order_by = ['-puntos'])
+
+		data = serializers.serialize("json",punt, fields=('usuario','puntos'))
+		print data
+		return HttpResponse("{\"puntos\":"+data+"}")
+
+
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
+
 
 #-------------------------------------------------------------------------------
 #añade una nueva pregunta para responder al usuario
@@ -851,9 +892,75 @@ def androidenviapreguntaextra(request, emisor, receptor):
 	elif (statusGCM == "noRed"):
 		return HttpResponse("no_red")
 		
+#-------------------------------------------------------------------------------
+#devuelve el listado completo de asignaturas
+#-------------------------------------------------------------------------------
 
+def androidasignaturascompleto(request):
 
+	l=Asignaturas.objects.all()
+	#l=l.extra(order_by = ['-profesor'])
+	data = serializers.serialize("json",l, fields=('asignatura','profesor'))
+	return HttpResponse("{\"asignaturas\":"+data+"}")
 
+#-------------------------------------------------------------------------------
+#devuelve el listado de las asignaturas matriculadas
+#-------------------------------------------------------------------------------
+
+def androidasignaturasusuario(request, usuario):
+
+	l=AsignaturasAlumno.objects.filter(usuario=usuario)
+	data = serializers.serialize("json",l, fields=('asignatura'))
+	return HttpResponse("{\"asignaturasalumno\":"+data+"}")
+
+#-------------------------------------------------------------------------------
+#matricula a un usuario de una asignatura
+#-------------------------------------------------------------------------------
+
+def androidasignaturasmatricula(request):
+	
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	
+	if request.method == "POST":
+		
+		usuario = request.POST['usuario']
+		asignatura = request.POST['asignatura']
+
+		try:
+			#miramos si ya existe la matricula
+			matrics = AsignaturasAlumno.objects.filter(usuario=usuario)
+			matrics = matrics.extra(where=['asignatura=%s'], params=[asignatura])
+			
+			if (matrics[0].asignatura == ''):
+				statusMatricula="ok"
+	
+			else:
+				statusMatricula="exist"
+				
+			
+		except:
+			statusMatricula="ok"
+			
+		if (statusMatricula=="ok"):
+			record=AsignaturasAlumno(usuario=usuario,asignatura=asignatura)
+			record.save()
+			print "ok"
+			return HttpResponse("ok")
+		else:
+			print "exist"
+			return HttpResponse("exist")
+		
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
+	
+	
+	
+	
+	
 
 
 
