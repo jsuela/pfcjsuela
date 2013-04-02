@@ -90,7 +90,7 @@
 												<h1>Listado lecciones</h1>
 												{% if listadoprofesor %}
 													{% for l in listadoprofesor %}
-														<li><h3>{{ l.leccion }}</h3></li>
+														<li><h3>{{ l.leccion }}</h3><h4>{{ l.asignatura }}, {{ l.fecha }}</h4></li>
 													{% endfor %}
 												{% else %}
 													<h4>No hay ninguna lección</h4>
@@ -101,7 +101,7 @@
 											<h1>Listado lecciones</h1>
 											{% if listadoalumno %}
 												{% for l in listadoalumno %}
-													<li><h3>{{ l.leccion }}</h3></li>
+													<li><h3>{{ l.leccion }}</h3><h4>{{ l.asignatura }}, {{ l.fecha }}</h4></li>
 												{% endfor %}
 											{% else %}
 												<h4>No hay ninguna lección</h4>

@@ -73,10 +73,11 @@
 												<h2>Introduzca una pregunta nueva</h2>
 												<form name=miformulario method="post" action="/mispreguntas1">{% csrf_token %}
 													<p>Pregunta: <input type="text" name="pregunta"></p>
-													<p>Respuesta: <input type="text" name="respuesta"><input type="radio" name="respuesta1_correcta" value="true">Si <input type="radio" name="respuesta1_correcta" value="false"checked>No</p>
+													<p>Sólo debe existir una respuesta correcta</p>
+													<p>Respuesta: <input type="text" name="respuesta"> Correcta: <input type="radio" name="respuesta1_correcta" value="true">Si <input type="radio" name="respuesta1_correcta" value="false"checked>No</p>
 
-													<p>Respuesta2: <input type="text" name="respuesta2"><input type="radio" name="respuesta2_correcta" value="true">Si <input type="radio" name="respuesta2_correcta" value="false"checked>No</p>
-													<p>Respuesta3: <input type="text" name="respuesta3"><input type="radio" name="respuesta3_correcta" value="true">Si <input type="radio" name="respuesta3_correcta" value="false" checked>No</p>
+													<p>Respuesta2: <input type="text" name="respuesta2"> Correcta: <input type="radio" name="respuesta2_correcta" value="true">Si <input type="radio" name="respuesta2_correcta" value="false"checked>No</p>
+													<p>Respuesta3: <input type="text" name="respuesta3"> Correcta: <input type="radio" name="respuesta3_correcta" value="true">Si <input type="radio" name="respuesta3_correcta" value="false" checked>No</p>
 													<input type="submit" value="cargar">
 												</form>
 
@@ -89,7 +90,8 @@
 													<li><h3>{{ l.pregunta }}</h3>
 													<h4>{{ l.respuesta }}</h4>
 													<h4>{{ l.respuesta2 }}</h4>
-													<h4>{{ l.respuesta3 }}</h4></li>
+													<h4>{{ l.respuesta3 }}</h4>
+													<h4>{{ l.asignatura }}</h4></li>
 												{% endfor %}
 											{% else %}
 												<h4>No hay preguntas pendientes</h4>

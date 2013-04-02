@@ -64,6 +64,7 @@
 
 								{% if user %}
 									<h1>¡Hola, {{ user }}!</h1>
+
 								{% else %}
 									<h2>Bienvenido, usuario. Por favor logueate.</h2>
 								{% endif %}
@@ -89,12 +90,26 @@
 
 								<!-- Para el ranking -->
 								{% if ranking %}
-
-									<h2>Ranking compañeros</h2>
+									{% if profesor %}
+										<h2>Ranking {{ asignatura }}</h2>
+									{% else %}
+										<h2>Ranking {{ asignatura }}</h2>
+										<h3><a href="/home">Volver al listado de asignaturas</h3>
+									{% endif %}
 									{% for r in ranking %}
 										<li><h3>{{ r.usuario }}</h3></li>
 										<h4>Puntos: {{ r.puntos }}</h4></li>
 									{% endfor %}
+									
+								{% elif listaAsignaturas %}
+									<h2>Elige una de tus asignaturas</h2>
+
+									{% for l in listaAsignaturas %}
+
+										<li><h3><a href="/ranking/{{ l.asignatura }}">{{ l.asignatura }}</a></h3></li>			
+								
+									{% endfor %}
+								
 								{% else %}
 									<h2>No hay puntuaciones para mostrar</h2>
 

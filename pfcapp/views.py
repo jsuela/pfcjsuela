@@ -16,8 +16,10 @@ from datetime import datetime
 
 import httplib, urllib
 
+from django.utils.encoding import smart_str
+
 #-------------------------------------------------------------------------------
-#mostraremos el ranking
+#mostraremos el ranking (profesor) o listado de asignaturas
 #-------------------------------------------------------------------------------
 
 def home(request):
@@ -28,16 +30,61 @@ def home(request):
 		if request.method=='GET':
 			ranking=Puntuaciones.objects.all()
 			ranking=ranking.extra(order_by = ['-puntos'])
-			
 
 
 			if request.user.is_staff:
 				profesor=usuario
+
+				#para que muestre la asignatura que imparte
+				a=Asignaturas.objects.get(profesor=profesor)
+				asignatura=a.asignatura
+				#y filtro para que solo aparezcan sus alumnos
+				ranking= ranking.extra(where=['asignatura=%s'], params=[asignatura])
+				listaAsignaturas=''
+			#si es alumno
 			else:
+				#le envio el listado de sus asignaturas matriculadas para que elija cual ranking quiere
+				listaAsignaturas = AsignaturasAlumno.objects.filter(usuario=usuario)
 				profesor=''
-			return HttpResponse(template.render(Context({'user':usuario,'profesor':profesor,'ranking':ranking})))
+				asignatura=''
+				ranking=''
+			return HttpResponse(template.render(Context({'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas})))
 	else:
 		return HttpResponseRedirect('/login')
+
+
+#-------------------------------------------------------------------------------
+#mostraremos el ranking de la asignatura dada
+#-------------------------------------------------------------------------------
+
+def ranking(request, asign):
+
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+			if request.user.is_staff:
+				return HttpResponseRedirect('/home')
+			else:
+				
+				profesor=''
+				asignatura=asign
+				listaAsignaturas=''
+				#devuelvo el ranking de esa asignatura, para ello obtengo si el usuario verdaderamente esta matriculado y no cotillea
+
+				existeMatr = AsignaturasAlumno.objects.filter(usuario=usuario)
+				existeMatr = existeMatr.extra(where=['asignatura=%s'], params=[asign])
+				
+				
+				ranking=Puntuaciones.objects.all()
+				ranking=ranking.extra(order_by = ['-puntos'])
+				ranking= ranking.extra(where=['asignatura=%s'], params=[asign])
+
+				return render_to_response('registration/inicioautes.html', {'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas}, context_instance=RequestContext(request))			
+				
+
+	else:
+		return HttpResponseRedirect('/login')
+
 
 #-------------------------------------------------------------------------------
 #mostraremos la info de contacto
@@ -82,6 +129,11 @@ def signin(request):
 	else:
 		if request.method == "POST":
 			username=request.POST['user']
+			
+			if " " in username:
+				signFail= "Error! El nombre de usuario no puede contener espacios"
+				return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+			
 			if username=="":
 				signFail= "Error! Debes rellenar todos los campos"
 				return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
@@ -108,22 +160,24 @@ def signin(request):
 					else:
 						user = User.objects.create_user(username,email,password)
 						user.save()
-						#añadimos a la tabla de puntuaciones
-						puntuaciones= Puntuaciones(usuario=username, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0);
-						puntuaciones.save()
+############################################################################################################################################################################################
+#hecho en matricular asignatura						#añadimos a la tabla de puntuaciones
+						#puntuaciones= Puntuaciones(usuario=username, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0);
+						#puntuaciones.save()
 
 						#añadimos las preguntas existentes al nuevo usuario para que disponga de todas
-						listadopreguntas= PreguntasCompletas.objects.all()
-						for i in listadopreguntas:
-							usuario_pendiente = username
-							pregunta= i.pregunta
-							respuesta= i.respuesta
-							respuesta2= i.respuesta2
-							respuesta3= i.respuesta3
-							record=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
-							record.save()
+						#listadopreguntas= PreguntasCompletas.objects.all()
+						#for i in listadopreguntas:
+						#	usuario_pendiente = username
+						#	pregunta= i.pregunta
+						#	respuesta= i.respuesta
+						#	respuesta2= i.respuesta2
+						#	respuesta3= i.respuesta3
+						#	record=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
+						#	record.save()
+############################################################################################################################################################################################							
 
-						sign = "Tu registro se ha realizado con éxito"
+						sign = "Tu registro se ha realizado con éxito, ya puedes iniciar sesión también en la aplicación móvil"
 						return render_to_response('registration/signin.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
 		else:
 			return render_to_response('registration/signin.html',c)
@@ -162,30 +216,37 @@ def signinprofesor(request):
 						password=request.POST['password']
 						password2=request.POST['password2']
 						asignatura=request.POST['asignatura']
+						
+						#comprobamos si ya existe alguna asignatura identica
+						try:
+							asig = Asignaturas.objects.get(asignatura=asignatura)
+							signFail= "Error! La asignatura ya existe"
+							return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+						except Asignaturas.DoesNotExist:
 
 
-						email=request.POST['email']
-						if (password=="") or (email==""):
-							signFail= "Error! Debes rellenar todos los campos"
-							return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
-						elif (len(password)<6):
-							signFail= "Error! La contraseña debe ser de al menos 6 caracteres"
-							return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
-						elif (password2!=password):
-							signFail= "Error! Los campos de la contraseña deben coincidir"
-							return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
-						else:
-							user = User.objects.create_user(username,email,password)
-							# staff solo para el profesor
-							user.is_staff = True
-							user.save()
-							
-							#almaceno también la asignatura que imparte dicho profesor
-							record=Asignaturas(asignatura=asignatura,profesor=username)
-							record.save()
-
-							sign = "Tu registro se ha realizado con éxito"
-							return render_to_response('registration/signinprofesor.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
+							email=request.POST['email']
+							if (password=="") or (email==""):
+								signFail= "Error! Debes rellenar todos los campos"
+								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+							elif (len(password)<6):
+								signFail= "Error! La contraseña debe ser de al menos 6 caracteres"
+								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+							elif (password2!=password):
+								signFail= "Error! Los campos de la contraseña deben coincidir"
+								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+							else:
+								user = User.objects.create_user(username,email,password)
+								# staff solo para el profesor
+								user.is_staff = True
+								user.save()
+								
+								#almaceno también la asignatura que imparte dicho profesor
+								record=Asignaturas(asignatura=asignatura,profesor=username)
+								record.save()
+	
+								sign = "Tu registro se ha realizado con éxito"
+								return render_to_response('registration/signinprofesor.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
 			#si la clave admin no coincide
 			else:
 				signFail= "Error! Introduce correctamente la clave dada por el administrador"
@@ -241,7 +302,11 @@ def mispreguntas1(request):
 
 					#compruebo si ya esxitia la pregunta, si exsitia doy error, si no, almaceno
 					try:
-						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta)
+						#miro la asignatura del profesor
+						usuario=request.user.username
+						u=Asignaturas.objects.get(profesor=usuario)
+						asignatura = u.asignatura
+						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta, asignatura=asignatura)
 						#if (str(pexiste.pregunta)!=str("")):
 					except PreguntasCompletas.DoesNotExist:
 						#miro la asignatura del profesor
@@ -370,7 +435,12 @@ def leccion(request):
 		#si es staff, por si añadimos nueva funcionalidad, por ahora es como si fuese un alumno
 		if request.user.is_staff:
 			if request.method=='GET':
+				#obtengo el nombre de la asignatura con el nombre del profesor
+				asignat=Asignaturas.objects.get(profesor=usuario)
+				asignatura=asignat.asignatura
+				#filtro
 				listado=Tips.objects.all()
+				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
 				listado=listado.extra(order_by = ['-fecha'])
 				return render_to_response('registration/leccion.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
 			#si no es GET muestro error
@@ -415,29 +485,52 @@ def leccionnueva(request):
 					try:
 
 						#obtenemos todos los codigos de los usuarios
+						#miro primero que asignatura imparte el profesor
+						usuario=request.user.username
+						u=Asignaturas.objects.get(profesor=usuario)
+						asignatura = u.asignatura
+						#miro que alumno tiene matriculada la asignatura
+						listadoalumnos= AsignaturasAlumno.objects.filter(asignatura=asignatura)
 
+												
+						#obtengo los codigos y posteriormente mirare si debo enviar o no
 						listadocodigos= CodigosGCM.objects.all()
+						
+		
+						
+						#quiero obtener solo los codigos GCM de los que esten matriculados
 						for i in listadocodigos:
+							for j in listadoalumnos:
+								#si el alumno esta en esa asigntura le mando notificacion, sino no hago nada
+								if (i.usuario==j.usuario):
 							
-							#para ello mando post a GCMServer 
-							form_fields = {
-								"registration_id": i.codigoGCM,#poner el del movil a enviar,
-								"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
-								"data.msg": "Te ha llegado una lección",
-							}
-							form_data = urllib.urlencode(form_fields)
-							headers={'Content-Type': 'application/x-www-form-urlencoded','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
-							#puerto por defecto para protocolo https 443
-							conn = httplib.HTTPSConnection("android.googleapis.com", 443)
-							conn.request("POST", "/gcm/send", form_data, headers)
+									#convierto a smart_str para que no de erro de UnicodeEncodeError
+									#asigna=smart_str(asignatura, encoding='utf-8')
 
-							response = conn.getresponse()
-							print response.status
-							#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
-							data = response.read()
-							print data
-							conn.close()
-							statusGCM="ok"
+									#convierto a smart_str para que no de erro de UnicodeEncodeError
+
+
+									mens=asignatura+"=Nuevo aviso o consejo"
+									mens = smart_str(mens)
+
+									#para ello mando post a GCMServer 
+									form_fields = {
+										"registration_id": i.codigoGCM,#poner el del movil a enviar,
+										"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
+										"data.msg": mens,
+									}
+									form_data = urllib.urlencode(form_fields)
+									headers={'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
+									#puerto por defecto para protocolo https 443
+									conn = httplib.HTTPSConnection("android.googleapis.com", 443)
+									conn.request("POST", "/gcm/send", form_data, headers)
+		
+									response = conn.getresponse()
+									#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
+									data = response.read()
+
+									conn.close()
+									statusGCM="ok"
 					except:
 						statusGCM="fail"
 
@@ -530,9 +623,7 @@ def pruebagcm(request):
 		return HttpResponseRedirect('/login')
 
 
-def xxx(request):
 
-	return HttpResponse("hola rawan")
 
 
 ################################################################################
@@ -592,14 +683,16 @@ def androidenviarespuestas(request):
 		respuesta_usuario = request.POST['respuesta']
 		pregunta = request.POST['pregunta']
 		usuario = request.POST['usuario']
+		asignatura = request.POST['asignatura']
 
-		question3=PreguntasVisibles.objects.get(usuario_pendiente=usuario,pregunta=pregunta)
+		#filtramos también por asignatura ya que puede haber dos preg iguales en distinto cursos
+		question3=PreguntasVisibles.objects.get(usuario_pendiente=usuario,pregunta=pregunta, asignatura=asignatura)
 		#miramos de que tipo es la pregunta para contabilizar puntos
 		tipoPregunta=question3.tag
 		question3.delete()
 
 		#comprobamos si es correcta
-		question2=PreguntasCompletas.objects.get(pregunta=pregunta)
+		question2=PreguntasCompletas.objects.get(pregunta=pregunta,asignatura= asignatura)
 
 		if respuesta_usuario == question2.respuesta:
 			escorrecta=question2.respuesta1_correcta
@@ -608,8 +701,10 @@ def androidenviarespuestas(request):
 		elif respuesta_usuario == question2.respuesta3:
 			escorrecta=question2.respuesta3_correcta
 
-		#anotamos lo puntos ganados con esta pregunta
-		usuario_puntos=Puntuaciones.objects.get(usuario=usuario)
+		#anotamos lo puntos ganados con esta pregunta en la correspondiente asignatura	
+		usuario_puntos=Puntuaciones.objects.get(usuario=usuario, asignatura=asignatura)
+
+		
 		if escorrecta == "true":
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos+2
@@ -637,7 +732,7 @@ def androidenviarespuestas(request):
 
 		fecha=datetime.now()
 
-		record=PreguntasRespondidas(usuario_no_pendiente=usuario,pregunta=pregunta,respuesta=verdadera, respuesta_dada=respuesta_usuario, respuesta_usuario_correcta=escorrecta, fecha=fecha)
+		record=PreguntasRespondidas(usuario_no_pendiente=usuario,pregunta=pregunta,respuesta=verdadera, respuesta_dada=respuesta_usuario, respuesta_usuario_correcta=escorrecta, fecha=fecha, asignatura=asignatura)
 		record.save()
 
 
@@ -652,26 +747,65 @@ def androidenviarespuestas(request):
 #-------------------------------------------------------------------------------
 
 def androidpidepreguntas(request, usuario):
+	
+	#csrftoken
+	c={}
+	c.update(csrf(request))
 
-	user= usuario
-
+	#user= usuario
 	#así selcciono de la base de datos, solo las preguntas dirigidas a los usuarios y los campos que solo necesito para no desvelar las respuestas
-	data = serializers.serialize("json", PreguntasVisibles.objects.filter(usuario_pendiente=user), fields=('usuario_pendiente','pregunta', 'respuesta', 'respuesta2', 'respuesta3', 'tag'))
-	return HttpResponse("{\"preguntas\":"+data+"}")
+	#data = serializers.serialize("json", PreguntasVisibles.objects.filter(usuario_pendiente=user), fields=('usuario_pendiente','pregunta', 'respuesta', 'respuesta2', 'respuesta3', 'tag'))
+	#return HttpResponse("{\"preguntas\":"+data+"}")
+	
+	if request.method == "POST":
+		user= usuario
+		asignatura = request.POST['asignatura']
+		p=PreguntasVisibles.objects.filter(usuario_pendiente=user)
+		#filtro por asignatura
+		p=p.extra(where=['asignatura=%s'], params=[asignatura])
+		data = serializers.serialize("json", p, fields=('usuario_pendiente','pregunta', 'respuesta', 'respuesta2', 'respuesta3', 'tag'))
+		return HttpResponse("{\"preguntas\":"+data+"}")
+
+
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
+
+	
 
 #-------------------------------------------------------------------------------
 #Devuelve el listado de las preguntas realizadas
 #-------------------------------------------------------------------------------
 
 def androidlistacorrectas(request, usuario):
+	#csrftoken
+	c={}
+	c.update(csrf(request))
 
-	user= usuario
-
-	p=PreguntasRespondidas.objects.filter(usuario_no_pendiente=user)
-	p=p.extra(order_by = ['-fecha'])
+	#user= usuario
+	#p=PreguntasRespondidas.objects.filter(usuario_no_pendiente=user)
+	#p=p.extra(order_by = ['-fecha'])
 	#así selcciono de la base de datos, solo las preguntas dirigidas a los usuarios y los campos que solo necesito para no desvelar las respuestas
-	data = serializers.serialize("json", p, fields=('pregunta', 'respuesta', 'respuesta_dada', 'respuesta_usuario_correcta'))
-	return HttpResponse("{\"preguntas\":"+data+"}")
+	#data = serializers.serialize("json", p, fields=('pregunta', 'respuesta', 'respuesta_dada', 'respuesta_usuario_correcta'))
+	#return HttpResponse("{\"preguntas\":"+data+"}")
+	
+	if request.method == "POST":
+		user= usuario
+		asignatura = request.POST['asignatura']
+		p=PreguntasRespondidas.objects.filter(usuario_no_pendiente=user)
+		#filtro por asignatura
+		p=p.extra(where=['asignatura=%s'], params=[asignatura])
+		p=p.extra(order_by = ['-fecha'])
+		data = serializers.serialize("json", p, fields=('pregunta', 'respuesta', 'respuesta_dada', 'respuesta_usuario_correcta'))
+		return HttpResponse("{\"preguntas\":"+data+"}")
+
+
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
+	
 
 #-------------------------------------------------------------------------------
 #devuelve el ranking de alumnos por puntos
@@ -683,34 +817,34 @@ def androidclasificacion(request):
 	#p=p.extra(order_by = ['-puntos'])
 	#data = serializers.serialize("json",p, fields=('usuario','puntos'))
 	#return HttpResponse("{\"puntos\":"+data+"}")
-
+	
 	#csrftoken
 	c={}
+
 	c.update(csrf(request))
+
 	
 	if request.method == "POST":
-		
+
 		asignatura = request.POST['asignatura']
-		print asignatura
+		
 		punt=Puntuaciones.objects.all()
-		print punt[0].usuario
 		#filtro por asignatura
 		punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
 		punt=punt.extra(order_by = ['-puntos'])
 
 		data = serializers.serialize("json",punt, fields=('usuario','puntos'))
-		print data
 		return HttpResponse("{\"puntos\":"+data+"}")
 
 
 	elif request.method == "GET":
 
-		print unicode(csrf(request)['csrf_token'])
-		return HttpResponse('',unicode(c))
+		c=unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',c)
 
 
 #-------------------------------------------------------------------------------
-#añade una nueva pregunta para responder al usuario
+#añade una nueva pregunta debido al ocio para responder al usuario
 #-------------------------------------------------------------------------------
 
 def androidsumapregunta(request, usuario):
@@ -718,38 +852,68 @@ def androidsumapregunta(request, usuario):
 	user= usuario
 	try:
 		p = PreguntasPendientes.objects.filter(usuario_pendiente=user)
-	
+		print "lego aqui1"
 		usuario_pendiente = p[0].usuario_pendiente
+		print "lego aqui2"
 		pregunta = p[0].pregunta
 		respuesta= p[0].respuesta
 		respuesta2= p[0].respuesta2
 		respuesta3= p[0].respuesta3
+		asignatura= p[0].asignatura
 		p[0].delete()
+		print "si hay pregunta"
 
-
-		record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="obligada")
+		record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="obligada", asignatura=asignatura)
 		record.save()
+		print "la guardo"
 
 		#le incrementamos el contador de preguntas obligadas
-		pobligada=Puntuaciones.objects.get(usuario=user)
+		pobligada=Puntuaciones.objects.get(usuario=user, asignatura=asignatura)
 		pobligada.preguntaobligada=pobligada.preguntaobligada+1
 		pobligada.save()
+		print ""
 
+		print "lego aqui1"
+		#convierto a smart_str para que no de erro de UnicodeEncodeError
+		mensa="ok="+asignatura
+		mensa = smart_str(mensa)
 
-		return HttpResponse("ok")
+		return HttpResponse(mensa)
 	except:
-		return HttpResponse("fail")
+		print "lego aqui80"
+		return HttpResponse("fail=fail")
 
 #-------------------------------------------------------------------------------
 #devuelve el listado de lecciones para los alumnos
 #-------------------------------------------------------------------------------
 
 def androidtips(request):
+	
+	#csrftoken
+	c={}
+	c.update(csrf(request))
 
-	l=Tips.objects.all()
-	l=l.extra(order_by = ['-fecha'])
-	data = serializers.serialize("json",l, fields=('leccion'))
-	return HttpResponse("{\"tips\":"+data+"}")
+	#l=Tips.objects.all()
+	#l=l.extra(order_by = ['-fecha'])
+	#data = serializers.serialize("json",l, fields=('leccion'))
+	#return HttpResponse("{\"tips\":"+data+"}")
+	
+	if request.method == "POST":
+		
+		asignatura = request.POST['asignatura']
+		l=Tips.objects.all()
+		#filtro por asignatura
+		l = l.extra(where=['asignatura=%s'], params=[asignatura])
+		l=l.extra(order_by = ['-fecha'])
+		data = serializers.serialize("json",l, fields=('leccion'))	
+		return HttpResponse("{\"tips\":"+data+"}")
+
+
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
+	
 
 #-------------------------------------------------------------------------------
 #añade una pregunta extra para responder al usuario y le suma 1 a preguntaextra
@@ -757,29 +921,43 @@ def androidtips(request):
 
 def androidpreguntaextra(request, usuario):
 
-	user= usuario
-	try:
-		p = PreguntasPendientes.objects.filter(usuario_pendiente=user)
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+
+
+	if request.method == "POST":
+		asignatura = request.POST['asignatura']
+		user= usuario
+		try:
+			p = PreguntasPendientes.objects.filter(usuario_pendiente=user)
+			p = p.extra(where=['asignatura=%s'], params=[asignatura])
+		
+			usuario_pendiente = p[0].usuario_pendiente
+			pregunta = p[0].pregunta
+			respuesta= p[0].respuesta
+			respuesta2= p[0].respuesta2
+			respuesta3= p[0].respuesta3
+			asignatura= p[0].asignatura
+			p[0].delete()
 	
-		usuario_pendiente = p[0].usuario_pendiente
-		pregunta = p[0].pregunta
-		respuesta= p[0].respuesta
-		respuesta2= p[0].respuesta2
-		respuesta3= p[0].respuesta3
-		p[0].delete()
+	
+			record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="extra", asignatura= asignatura)
+			record.save()
+	
+			#le incrementamos el contador de preguntas extras
+			pextra=Puntuaciones.objects.get(usuario=user, asignatura=asignatura)
+			pextra.preguntaextra=pextra.preguntaextra+1
+			pextra.save()
+	
+			return HttpResponse("ok")
+		except:
+			return HttpResponse("fail")
+	
+	elif request.method == "GET":
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
 
-
-		record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="extra")
-		record.save()
-
-		#le incrementamos el contador de preguntas extras
-		pextra=Puntuaciones.objects.get(usuario=user)
-		pextra.preguntaextra=pextra.preguntaextra+1
-		pextra.save()
-
-		return HttpResponse("ok")
-	except:
-		return HttpResponse("fail")
 
 #-------------------------------------------------------------------------------
 #Registro codigoGCM usuario
@@ -818,79 +996,114 @@ def androidgcmregistrocliente(request):
 
 def androidenviapreguntaextra(request, emisor, receptor):
 
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	statusGCM=""
 
-	try:
-		#miramos también si exiten preguntas disponibles
-		pre = PreguntasPendientes.objects.filter(usuario_pendiente=receptor)
-		u=CodigosGCM.objects.get(usuario=receptor)
-		codigogcm = u.codigoGCM
-		print codigogcm
-		statusGCM="ok"
-		#si existe el receptor, le hago llegar la notificacion
-	except:
-		statusGCM="fail"
-	if (statusGCM!="fail"):
-		#para ello mando post a GCMServer 
-		form_fields = {
-			"registration_id": codigogcm,#poner el del movil a enviar,
-			"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
-			"data.msg": "Te ha enviado una pregunta "+emisor,
-		}
-		form_data = urllib.urlencode(form_fields)
-		headers={'Content-Type': 'application/x-www-form-urlencoded','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
-		#puerto por defecto para protocolo https 443
-		conn = httplib.HTTPSConnection("android.googleapis.com", 443)
-		conn.request("POST", "/gcm/send", form_data, headers)
+	if request.method == "POST":
+		asignatura = request.POST['asignatura']
+		
 		try:
-			response = conn.getresponse()
-			print response.status
-			#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
-			data = response.read()
-			print "hola data!*************"
-			print data
-			conn.close()
+			#miramos también si exiten preguntas disponibles y de la asignatura marcada
+			pre = PreguntasPendientes.objects.filter(usuario_pendiente=receptor)
+			pre = pre.extra(where=['asignatura=%s'], params=[asignatura])
+			probamos= pre[0].pregunta
 			statusGCM="ok"
-		except:
-			statusGCM="noRed"
-
-
-
-	#si no se ha dado de alta el usuario en GCM no añadirle la pregunta
-	if (statusGCM == "ok"):
-		try:
-			#intentamos añadir la pregunta al receptor
-			p = PreguntasPendientes.objects.filter(usuario_pendiente=receptor)
+			try:
+				#miramos también si exite eñ usuario
 	
-			usuario_pendiente = p[0].usuario_pendiente
-			pregunta = p[0].pregunta
-			respuesta= p[0].respuesta
-			respuesta2= p[0].respuesta2
-			respuesta3= p[0].respuesta3
-			p[0].delete()
-
-
-			record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="amistosa enviada por "+emisor)
-			record.save()
-
-			#le incrementamos el contador de preguntas amistosas recibidas y 
-			# enviadas (emisor y receptor)
-			pamistosa=Puntuaciones.objects.get(usuario=receptor)
-			pamistosa.preguntarecibidaamistosa=pamistosa.preguntarecibidaamistosa+1
-			pamistosa.save()
-
-			pamistosa2=Puntuaciones.objects.get(usuario=emisor)
-			pamistosa2.preguntaenviadaamistosa=pamistosa2.preguntaenviadaamistosa+1
-			pamistosa2.save()
-
-			return HttpResponse("ok")
+				u=CodigosGCM.objects.get(usuario=receptor)
+				codigogcm = u.codigoGCM
+				statusGCM="ok"
+	
+				#si existe el receptor, le hago llegar la notificacion
+			except:
+				statusGCM="fail"
 		except:
+			statusGCM="failNoPregunta"
+
+
+
+		if (statusGCM=="ok"):
+			#para ello mando post a GCMServer 
+			
+			#convierto a smart_str para que no de erro de UnicodeEncodeError
+			mensa=asignatura+"=Te ha enviado una pregunta "+emisor
+			mensa = smart_str(mensa)
+			
+			
+			
+			
+			form_fields = {
+				"registration_id": codigogcm,#poner el del movil a enviar,
+				"collapse_key": "test", #collapse_key is an arbitrary string (implement as you want)
+				"data.msg": mensa,
+			}
+			form_data = urllib.urlencode(form_fields)
+			headers={'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8','Authorization': 'key=' + "AIzaSyCDoEsG-yNj8H-ObNJjeu39FxVtEk4fAWg"}
+			#puerto por defecto para protocolo https 443
+			conn = httplib.HTTPSConnection("android.googleapis.com", 443)
+			conn.request("POST", "/gcm/send", form_data, headers)
+			try:
+				response = conn.getresponse()
+				print response.status
+				#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
+				data = response.read()
+
+				conn.close()
+				statusGCM="ok"
+			except:
+				statusGCM="noRed"
+	
+	
+	
+		#si no se ha dado de alta el usuario en GCM no añadirle la pregunta
+		if (statusGCM == "ok"):
+			try:
+				#intentamos añadir la pregunta al receptor
+				p = PreguntasPendientes.objects.filter(usuario_pendiente=receptor)
+				p = p.extra(where=['asignatura=%s'], params=[asignatura])	
+					
+				usuario_pendiente = p[0].usuario_pendiente
+				pregunta = p[0].pregunta
+				respuesta= p[0].respuesta
+				respuesta2= p[0].respuesta2
+				respuesta3= p[0].respuesta3
+				asignatura= p[0].asignatura
+				p[0].delete()
+	
+	
+				record=PreguntasVisibles(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, tag="amistosa enviada por "+emisor, asignatura=asignatura)
+				record.save()
+	
+				#le incrementamos el contador de preguntas amistosas recibidas y 
+				# enviadas (emisor y receptor)
+				pamistosa=Puntuaciones.objects.get(usuario=receptor, asignatura=asignatura)
+				pamistosa.preguntarecibidaamistosa=pamistosa.preguntarecibidaamistosa+1
+				pamistosa.save()
+	
+				pamistosa2=Puntuaciones.objects.get(usuario=emisor, asignatura=asignatura)
+				pamistosa2.preguntaenviadaamistosa=pamistosa2.preguntaenviadaamistosa+1
+				pamistosa2.save()
+	
+				return HttpResponse("ok")
+			except:
+				return HttpResponse("fail")
+	
+		elif (statusGCM == "fail"):
+			return HttpResponse("no_user")
+		
+		elif (statusGCM == "failNoPregunta"):
 			return HttpResponse("fail")
+	
+		elif (statusGCM == "noRed"):
+			return HttpResponse("no_red")
+		
+	elif request.method == "GET":
 
-	elif (statusGCM == "fail"):
-		return HttpResponse("no_user")
-
-	elif (statusGCM == "noRed"):
-		return HttpResponse("no_red")
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
 		
 #-------------------------------------------------------------------------------
 #devuelve el listado completo de asignaturas
@@ -944,6 +1157,24 @@ def androidasignaturasmatricula(request):
 			statusMatricula="ok"
 			
 		if (statusMatricula=="ok"):
+			#cuando se matricule de la asignatura le añadimos la puntuación y las preguntas que haya hasta el momento
+			#añadimos a la tabla de puntuaciones
+			puntuaciones= Puntuaciones(usuario=usuario, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0, asignatura=asignatura);
+			puntuaciones.save()
+			
+			#añadimos las preguntas existentes al nuevo usuario para que disponga de todas
+			listadopreguntas= PreguntasCompletas.objects.filter(asignatura=asignatura)
+			for i in listadopreguntas:
+				usuario_pendiente = usuario
+				pregunta= i.pregunta
+				respuesta= i.respuesta
+				respuesta2= i.respuesta2
+				respuesta3= i.respuesta3
+				record=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, asignatura=asignatura)
+				record.save()			
+			
+			
+			#almaceno la asignatura en la que se acaba de matricular
 			record=AsignaturasAlumno(usuario=usuario,asignatura=asignatura)
 			record.save()
 			print "ok"

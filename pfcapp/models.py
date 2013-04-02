@@ -2,9 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class PreguntasCompletas(models.Model):
-	#falta poner el primary key a pregunta para que no se repitan
+	#ya no es primary key porque puede que se repitan preguntas en distintas asign
 	#usuario_pendiente=models.TextField()
-	pregunta=models.TextField(primary_key=True)
+	pregunta=models.TextField()
 	respuesta=models.TextField()
 	respuesta1_correcta=models.TextField()
 	respuesta2=models.TextField()
@@ -32,6 +32,7 @@ class PreguntasRespondidas(models.Model):
 
 
 class Puntuaciones(models.Model):
+	#por cada asignatura
 	usuario=models.TextField()
 	puntos=models.IntegerField()
 	preguntaextra=models.IntegerField()
@@ -58,7 +59,7 @@ class Tips(models.Model):
 class CodigosGCM(models.Model):
 	usuario=models.TextField()
 	codigoGCM=models.TextField()
-	asignatura=models.TextField()
+	#asignatura=models.TextField()
 	
 class Asignaturas(models.Model):
 	asignatura=models.TextField()

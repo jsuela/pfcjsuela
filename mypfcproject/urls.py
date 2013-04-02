@@ -11,6 +11,7 @@ urlpatterns = patterns('',
 
     url(r'^$', 'pfcapp.views.home', name='home'),
     url(r'^home', 'pfcapp.views.home', name='home'),
+    url(r'^ranking/(?P<asign>.*)$', 'pfcapp.views.ranking', name='ranking'),
     url(r'^admin/', include(admin.site.urls)),
 	url(r'^login', 'django.contrib.auth.views.login'),
 	url(r'^logout', 'django.contrib.auth.views.logout'),
@@ -25,19 +26,20 @@ urlpatterns = patterns('',
 
 	#url(r'^pruebagrafica', 'pfcapp.views.pruebagrafica', name='pruebagrafica'),
 	url(r'^pruebagcm', 'pfcapp.views.pruebagcm', name='pruebagcm'),
-	url(r'^xxx', 'pfcapp.views.xxx', name='xxx'),
+
 
 
 
 
 	#android
+    url(r'^android/clasificacion', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
 	url(r'^android/login', 'pfcapp.views.androidlogin', name='androidlogin'),
 	url(r'^android/enviarespuestas', 'pfcapp.views.androidenviarespuestas', name='androidenviarespuestas'),
 	url(r'^android/sumapregunta/(?P<usuario>.*)$', 'pfcapp.views.androidsumapregunta', name='androidsumapregunta'),
 	url(r'^android/preguntaextra/(?P<usuario>.*)$', 'pfcapp.views.androidpreguntaextra', name='androidpreguntaextra'),
 	url(r'^android/pidepreguntas/(?P<usuario>.*)$', 'pfcapp.views.androidpidepreguntas', name='androidpidepreguntas'),
 	url(r'^android/listacorrectas/(?P<usuario>.*)$', 'pfcapp.views.androidlistacorrectas', name='androidlistacorrectas'),
-	url(r'^android/clasificacion', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
+
 	url(r'^android/tips', 'pfcapp.views.androidtips', name='androidtips'),
 	url(r'^android/enviapreguntaextra/(?P<emisor>.*)/(?P<receptor>.*)$', 'pfcapp.views.androidenviapreguntaextra', name='androidenviapreguntaextra'),
     url(r'^android/asignaturas/listado/(?P<usuario>.*)$', 'pfcapp.views.androidasignaturasusuario', name='androidasignaturasusuario'),
