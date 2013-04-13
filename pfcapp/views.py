@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno
+from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno, Colegios, Persona, MedidaOcioDiaria
 from django.core.context_processors import csrf
 from django.contrib.auth import authenticate
 
@@ -12,7 +12,7 @@ from django.template import Context, RequestContext
 from django.utils import simplejson
 from django.core import serializers
 
-from datetime import datetime
+from datetime import datetime, date
 
 import httplib, urllib
 
@@ -40,6 +40,13 @@ def home(request):
 				asignatura=a.asignatura
 				#y filtro para que solo aparezcan sus alumnos
 				ranking= ranking.extra(where=['asignatura=%s'], params=[asignatura])
+				#y filtro para que sean solo los de su colegio ya que puede haber dos asignaturas con elmismo nombre
+				#en distrintos colegios
+				u = User.objects.get(username=usuario)
+				usuario_colegio = u.persona.colegio
+				
+				ranking= ranking.extra(where=['colegio=%s'], params=[usuario_colegio])
+				
 				listaAsignaturas=''
 			#si es alumno
 			else:
@@ -74,10 +81,16 @@ def ranking(request, asign):
 				existeMatr = AsignaturasAlumno.objects.filter(usuario=usuario)
 				existeMatr = existeMatr.extra(where=['asignatura=%s'], params=[asign])
 				
+				#como la asignatura puede tener el mismo nombre en dos colegios distintos, le tengo que pasar el colegio
+				#para ello, extraigo el colegio del usuario
+				u = User.objects.get(username=usuario)
+				usuario_colegio = u.persona.colegio
 				
 				ranking=Puntuaciones.objects.all()
 				ranking=ranking.extra(order_by = ['-puntos'])
 				ranking= ranking.extra(where=['asignatura=%s'], params=[asign])
+				#filtro también por colegio por si hubiese la misma asignatura en colegios distintos
+				ranking= ranking.extra(where=['colegio=%s'], params=[usuario_colegio])
 
 				return render_to_response('registration/inicioautes.html', {'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas}, context_instance=RequestContext(request))			
 				
@@ -109,11 +122,11 @@ def contact(request):
 #-------------------------------------------------------------------------------
 
 def cses(request):
-		fichero=open('style.css')
-		cssestandar=fichero.read()	
-		myResponse = HttpResponse(cssestandar)
-		myResponse['Content-Type'] = 'text/css'
-		return myResponse
+	fichero=open('style.css')
+	cssestandar=fichero.read()	
+	myResponse = HttpResponse(cssestandar)
+	myResponse['Content-Type'] = 'text/css'
+	return myResponse
 
 #-------------------------------------------------------------------------------
 #Registro de alumnos
@@ -128,6 +141,8 @@ def signin(request):
 		return HttpResponseRedirect('/home')
 	else:
 		if request.method == "POST":
+			colegio=request.POST['colegio']
+			print colegio
 			username=request.POST['user']
 			
 			if " " in username:
@@ -141,25 +156,33 @@ def signin(request):
 				try:
 					u = User.objects.get(username__exact=username)
 					if str(u) == str(username):
-						signFail= "Error! El usuario "+username +" ya existe, pruebe de nuevo con otro usuario"
+						signFail= "¡Error! El usuario "+username +" ya existe, pruebe de nuevo con otro usuario"
 						return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 				except User.DoesNotExist:
 					password=request.POST['password']
 					password2=request.POST['password2']
+					colegio=request.POST['colegio']
 
 					email=request.POST['email']
 					if (password=="") or (email==""):
-						signFail= "Error! Debes rellenar todos los campos"
+						signFail= "¡Error! Debes rellenar todos los campos"
 						return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 					elif (len(password)<6):
-						signFail= "Error! La contraseña debe ser de al menos 6 caracteres"
+						signFail= "¡Error! La contraseña debe ser de al menos 6 caracteres"
 						return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 					elif (password2!=password):
-						signFail= "Error! Los campos de la contraseña deben coincidir"
+						signFail= "¡Error! Los campos de la contraseña deben coincidir"
+						return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+					elif (colegio=="Elija Colegio"):
+						signFail= "¡Error! Debes seleccionar tu colegio"
 						return render_to_response('registration/signin.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 					else:
 						user = User.objects.create_user(username,email,password)
 						user.save()
+						
+						record1=Persona(usuario=user, colegio=colegio)
+						record1.save()	
+						
 ############################################################################################################################################################################################
 #hecho en matricular asignatura						#añadimos a la tabla de puntuaciones
 						#puntuaciones= Puntuaciones(usuario=username, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0);
@@ -179,6 +202,11 @@ def signin(request):
 
 						sign = "Tu registro se ha realizado con éxito, ya puedes iniciar sesión también en la aplicación móvil"
 						return render_to_response('registration/signin.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
+		elif request.method == "GET":
+			lcolegios=Colegios.objects.all()
+			lcolegios=lcolegios.extra(order_by = ['colegio'])
+			return render_to_response('registration/signin.html', {'user':'', 'lcolegios':lcolegios}, context_instance=RequestContext(request))
+		
 		else:
 			return render_to_response('registration/signin.html',c)
 
@@ -196,15 +224,19 @@ def signinprofesor(request):
 	else:
 		#GET
 		if request.method == "GET":
-			return render_to_response('registration/signinprofesor.html',c)
+			lcolegios=Colegios.objects.all()
+			lcolegios=lcolegios.extra(order_by = ['colegio'])
+			return render_to_response('registration/signinprofesor.html', {'user':'', 'lcolegios':lcolegios}, context_instance=RequestContext(request))
 		if request.method == "POST":
 			CLAVE_ADMIN="efsmcegqempsecelmcemqeg"
 			clave=request.POST['clave']
 			if CLAVE_ADMIN == clave:
 
 				username=request.POST['user']
-				if username=="":
-					signFail= "Error! Debes rellenar todos los campos"
+				colegioAlta=request.POST['colegioAlta']
+				colegio=request.POST['colegio']
+				if ((username=="") or ((colegio=="Elija Colegio") and (colegioAlta==""))):
+					signFail= "¡Error! Debes rellenar todos los campos"
 					return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 				else:
 					try:
@@ -219,37 +251,67 @@ def signinprofesor(request):
 						
 						#comprobamos si ya existe alguna asignatura identica
 						try:
-							asig = Asignaturas.objects.get(asignatura=asignatura)
-							signFail= "Error! La asignatura ya existe"
+							if (colegio=="Elija Colegio"):
+								asig = Asignaturas.objects.get(asignatura=asignatura, colegio=colegioAlta)
+								signFail= "¡Error! La asignatura ya existe"
+							else:
+								asig = Asignaturas.objects.get(asignatura=asignatura, colegio=colegio)
+								signFail= "¡Error! La asignatura ya existe"
+								
+
+							if (colegio=="Elija Colegio"):
+								asig = Colegios.objects.get(colegio=colegioAlta)
+								signFail= "¡Error! El colegio ya existe"
+									
 							return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
-						except Asignaturas.DoesNotExist:
+						except Asignaturas.DoesNotExist, Colegios.DoesNotExist:
 
 
 							email=request.POST['email']
 							if (password=="") or (email==""):
-								signFail= "Error! Debes rellenar todos los campos"
+								signFail= "¡Error! Debes rellenar todos los campos"
 								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 							elif (len(password)<6):
-								signFail= "Error! La contraseña debe ser de al menos 6 caracteres"
+								signFail= "¡Error! La contraseña debe ser de al menos 6 caracteres"
 								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 							elif (password2!=password):
-								signFail= "Error! Los campos de la contraseña deben coincidir"
+								signFail= "¡Error! Los campos de la contraseña deben coincidir"
+								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
+							elif ((colegio!="Elija Colegio") and (colegioAlta!="")):
+								signFail= "¡Error! No puedes seleccionar dos colegios"
 								return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 							else:
+								
 								user = User.objects.create_user(username,email,password)
 								# staff solo para el profesor
 								user.is_staff = True
 								user.save()
+								#almaceno el cole al que pertenece
+								if (colegio=="Elija Colegio"):
+									record1=Persona(usuario=user, colegio=colegioAlta)
+									
+								else:
+									record1=Persona(usuario=user, colegio=colegio)
+								record1.save()	
+								
+								#miro si es un colegio nuevo o ya existía, si colegio esta en blanco , sino no almacena
+								if (colegio=="Elija Colegio"):
+									record2=Colegios(colegio=colegioAlta)
+									record2.save()								
+																			
+														
 								
 								#almaceno también la asignatura que imparte dicho profesor
-								record=Asignaturas(asignatura=asignatura,profesor=username)
+								if (colegio=="Elija Colegio"):
+									record=Asignaturas(asignatura=asignatura,profesor=username, colegio=colegioAlta)
+								else:
+									record=Asignaturas(asignatura=asignatura,profesor=username, colegio=colegio)								
 								record.save()
-	
 								sign = "Tu registro se ha realizado con éxito"
 								return render_to_response('registration/signinprofesor.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
 			#si la clave admin no coincide
 			else:
-				signFail= "Error! Introduce correctamente la clave dada por el administrador"
+				signFail= "¡Error! Introduce correctamente la clave dada por el administrador"
 				return render_to_response('registration/signinprofesor.html', {'user':'','error':signFail}, context_instance=RequestContext(request))
 		#si no es ni GET ni POST
 		else:
@@ -304,24 +366,33 @@ def mispreguntas1(request):
 					try:
 						#miro la asignatura del profesor
 						usuario=request.user.username
-						u=Asignaturas.objects.get(profesor=usuario)
+						#miro el colegio del profesor para poder filtrar tb por colegio
+						miusuario = User.objects.get(username=usuario)
+						usuario_colegio = miusuario.persona.colegio
+												
+						u=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 						asignatura = u.asignatura
-						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta, asignatura=asignatura)
+						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta, asignatura=asignatura, colegio=usuario_colegio)
 						#if (str(pexiste.pregunta)!=str("")):
 					except PreguntasCompletas.DoesNotExist:
 						#miro la asignatura del profesor
 						usuario=request.user.username
-						u=Asignaturas.objects.get(profesor=usuario)
+						#miro el colegio del profesor para poder filtrar tb por colegio
+						miusuario = User.objects.get(username=usuario)
+						usuario_colegio = miusuario.persona.colegio
+						
+						u=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 						asignatura = u.asignatura
 
 						#almaceno
-						record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta, asignatura=asignatura)
+						record=PreguntasCompletas(pregunta=pregunta,respuesta=respuesta,respuesta1_correcta=respuesta1_correcta ,respuesta2=respuesta2,respuesta2_correcta=respuesta2_correcta, respuesta3=respuesta3,respuesta3_correcta=respuesta3_correcta, asignatura=asignatura, colegio=usuario_colegio)
 						record.save()
 						for i in Usuarios:
-							usuario_pendiente = i.username
-				
-							record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, asignatura=asignatura)
-							record2.save()
+							if not (i.is_staff):
+								usuario_pendiente = i.username
+					
+								record2=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3, asignatura=asignatura)
+								record2.save()
 
 						form = "Tu pregunta se ha almacenado."
 						return render_to_response('registration/formulario1.html', {'profesor':usuario,'exito':form}, context_instance=RequestContext(request)) 
@@ -363,7 +434,18 @@ def mispreguntas2(request):
 		#si es staff
 		if request.user.is_staff:
 			if request.method=='GET':
+				#miro el colegio del profesor para poder filtrar tb por colegio
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				#filtro por asignatura
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+				
 				listado=PreguntasCompletas.objects.all()
+				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
+				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
+				
+				
 				return render_to_response('registration/formulario2.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
 			#si no es GET muestro error
 			else:
@@ -407,10 +489,10 @@ def conf(request):
 					error=''
 					exito="Contraseña modificada"
 				else:
-					error= "Error! La contraseña debe ser de al menos 6 caracteres"
+					error= "¡Error! La contraseña debe ser de al menos 6 caracteres"
 					exito=''
 			else:
-				error= "Error! Las contraseñas deben coincidir"
+				error= "¡Error! Las contraseñas deben coincidir"
 				exito=''
 			if request.user.is_staff:
 				profesor=usuario
@@ -421,41 +503,7 @@ def conf(request):
 	else:
 		return HttpResponseRedirect('/login')
 
-#-------------------------------------------------------------------------------
-#Tanto si es alumno como profesor devuelve la lista de lecciones
-#-------------------------------------------------------------------------------
 
-def leccion(request):
-	#csrftoken
-	c={}
-	c.update(csrf(request))
-	if request.user.is_authenticated():
-		template = get_template("registration/formulario2.html")
-		usuario=request.user.username
-		#si es staff, por si añadimos nueva funcionalidad, por ahora es como si fuese un alumno
-		if request.user.is_staff:
-			if request.method=='GET':
-				#obtengo el nombre de la asignatura con el nombre del profesor
-				asignat=Asignaturas.objects.get(profesor=usuario)
-				asignatura=asignat.asignatura
-				#filtro
-				listado=Tips.objects.all()
-				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
-				listado=listado.extra(order_by = ['-fecha'])
-				return render_to_response('registration/leccion.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
-			#si no es GET muestro error
-			else:
-				return render_to_response('registration/leccion.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
-		#si es alumno
-		else:
-			try:
-				listado=Tips.objects.all()
-				listado=listado.extra(order_by = ['-fecha'])
-			except PreguntasRespondidas.DoesNotExist:
-				listado=''
-			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
-	else:
-		return HttpResponseRedirect('/login')
 
 #-------------------------------------------------------------------------------
 #Si es alumno devuelve las lecciones
@@ -466,6 +514,7 @@ def leccionnueva(request):
 	#csrftoken
 	c={}
 	c.update(csrf(request))
+
 	if request.user.is_authenticated():
 		template = get_template("registration/leccionnueva.html")
 		usuario=request.user.username
@@ -478,7 +527,7 @@ def leccionnueva(request):
 				leccion=request.POST['leccion']
 
 				if (leccion==''):
-					formFail= "Error! la lección está en blanco"
+					formFail= "¡Error! la lección está en blanco"
 					return render_to_response('registration/leccionnueva.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
 				else:
 					#miramos si podemos notificar, y si va bien se lo comentamos al profesor
@@ -487,7 +536,13 @@ def leccionnueva(request):
 						#obtenemos todos los codigos de los usuarios
 						#miro primero que asignatura imparte el profesor
 						usuario=request.user.username
-						u=Asignaturas.objects.get(profesor=usuario)
+						
+						#miro el colegio del profesor para poder filtrar tb por colegio
+						miusuario = User.objects.get(username=usuario)
+						usuario_colegio = miusuario.persona.colegio
+						
+						
+						u=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 						asignatura = u.asignatura
 						#miro que alumno tiene matriculada la asignatura
 						listadoalumnos= AsignaturasAlumno.objects.filter(asignatura=asignatura)
@@ -496,7 +551,7 @@ def leccionnueva(request):
 						#obtengo los codigos y posteriormente mirare si debo enviar o no
 						listadocodigos= CodigosGCM.objects.all()
 						
-		
+						statusGCM="ok"
 						
 						#quiero obtener solo los codigos GCM de los que esten matriculados
 						for i in listadocodigos:
@@ -538,11 +593,16 @@ def leccionnueva(request):
 					if (statusGCM == "ok"):
 						#miro la asignatura del profesor
 						usuario=request.user.username
-						u=Asignaturas.objects.get(profesor=usuario)
+						
+						#miro el colegio del profesor para poder filtrar tb por colegio
+						miusuario = User.objects.get(username=usuario)
+						usuario_colegio = miusuario.persona.colegio
+						
+						u=Asignaturas.objects.get(profesor=usuario,colegio=usuario_colegio)
 						asignatura = u.asignatura
 						
 						fecha=datetime.now()
-						record=Tips(leccion=leccion, fecha= fecha, asignatura=asignatura)
+						record=Tips(leccion=leccion, fecha= fecha, asignatura=asignatura, colegio= usuario_colegio)
 						record.save()
 
 						form = "Tu lección se ha almacenado y notificado a los alumnos"
@@ -559,6 +619,103 @@ def leccionnueva(request):
 	#si no esta autenticado
 	else:
 		return HttpResponseRedirect('/login')
+
+
+
+#-------------------------------------------------------------------------------
+#Lección por asignatura
+#-------------------------------------------------------------------------------
+
+def leccionporasignatura(request, asign):
+
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+			if request.user.is_staff:
+				return HttpResponseRedirect('/home')
+			else:
+							
+				#como la asignatura puede tener el mismo nombre en dos colegios distintos, le tengo que pasar el colegio
+				#para ello, extraigo el colegio del usuario
+				u = User.objects.get(username=usuario)
+				usuario_colegio = u.persona.colegio
+				try:
+					listado=Tips.objects.all()
+					listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
+					listado=listado.extra(where=['asignatura=%s'], params=[asign])
+					listado=listado.extra(order_by = ['-fecha'])
+					
+
+				except Tips.DoesNotExist:
+					listado=''
+
+				return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
+				
+
+	else:
+		return HttpResponseRedirect('/login')
+
+
+
+
+
+#-------------------------------------------------------------------------------
+#Tanto si es alumno como profesor devuelve la lista de lecciones
+#-------------------------------------------------------------------------------
+
+def leccion(request):
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	if request.user.is_authenticated():
+		template = get_template("registration/formulario2.html")
+		usuario=request.user.username
+		#si es staff, por si añadimos nueva funcionalidad, por ahora es como si fuese un alumno
+		if request.user.is_staff:
+			if request.method=='GET':
+				#obtengo el nombre de la asignatura con el nombre del profesor y su colegio					
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+				#filtro
+				listado=Tips.objects.all()
+				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
+				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
+				listado=listado.extra(order_by = ['-fecha'])
+				return render_to_response('registration/leccion.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
+			#si no es GET muestro error
+			else:
+				return render_to_response('registration/leccion.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
+		#si es alumno
+		else:
+			
+			
+			
+			#le envio el listado de sus asignaturas matriculadas para que elija cual ranking quiere
+			listaAsignaturas = AsignaturasAlumno.objects.filter(usuario=usuario)
+			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':'', 'listaAsignaturas':listaAsignaturas }, context_instance=RequestContext(request))   		
+			
+			
+			
+			
+			try:
+				listado=Tips.objects.all()
+				#obtengo el nombre de la asignatura con el nombre del profesor y su colegio					
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
+				
+				listado=listado.extra(order_by = ['-fecha'])
+			except Tips.DoesNotExist:
+				listado=''
+			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
+	else:
+		return HttpResponseRedirect('/login')
+
+
+
 
 
 #-------------------------------------------------------------------------------
@@ -622,6 +779,252 @@ def pruebagcm(request):
 	else:
 		return HttpResponseRedirect('/login')
 
+
+#-------------------------------------------------------------------------------
+#gráfica que devuelve las puntuaciones de tus alumnos
+#solo profesor
+#-------------------------------------------------------------------------------
+
+
+def graficapuntosasign(request):
+	
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=="GET":
+			if request.user.is_staff:
+				#miro el colegio del alumno para poder filtrar tb por colegio
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				#obtengo su asignatura
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+
+				
+				
+				punt=Puntuaciones.objects.all()
+				#filtro por asignatura
+				punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
+				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
+				punt=punt.extra(order_by = ['-puntos'])
+
+
+				return render_to_response('charts/puntuaciones.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
+
+				
+			else:
+				return HttpResponseRedirect('/home')
+
+		else:#si no es GET
+			return HttpResponseRedirect('/home')
+
+			
+	else:
+		return HttpResponseRedirect('/login')
+	
+	
+	
+#-------------------------------------------------------------------------------
+#devuelvo usuarios para que pueda elegir uno
+#solo profesor
+#-------------------------------------------------------------------------------
+
+
+def graficatiempo(request):
+	
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=="GET":
+			if request.user.is_staff:
+				#miro el colegio del alumno para poder filtrar tb por colegio
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				#obtengo su asignatura
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+
+				
+				listadoalumnos= AsignaturasAlumno.objects.filter(asignatura=asignatura)
+				
+				
+				
+				return render_to_response('registration/grafica.html', {'listadoalumnos':listadoalumnos}, context_instance=RequestContext(request))
+
+				
+			else:
+				return HttpResponseRedirect('/home')
+
+		else:#si no es GET
+			return HttpResponseRedirect('/home')
+
+			
+	else:
+		return HttpResponseRedirect('/login')
+	
+	
+#-------------------------------------------------------------------------------
+#devuelvo gráfica por usuario del tiempo ocioso
+#solo profesor
+#-------------------------------------------------------------------------------
+def graficatiempousuario(request, user):
+	
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=="GET":
+			if request.user.is_staff:
+				tocio=MedidaOcioDiaria.objects.filter(usuario=user)
+				#filtro por asignatura
+				#tocio = tocio.extra(where=['usuario=%s'], params=[usuario])
+				tocio=tocio.extra(order_by = ['-fecha'])
+
+
+
+				return render_to_response('charts/tiempoociosoalumno.html', {'tocio':tocio}, context_instance=RequestContext(request))
+
+				
+			else:
+				return HttpResponseRedirect('/home')
+
+		else:#si no es GET
+			return HttpResponseRedirect('/home')
+
+			
+	else:
+		return HttpResponseRedirect('/login')
+
+
+#-------------------------------------------------------------------------------
+#devuelve la gráfica con los tipos de preguntas hechas por los usuarios
+#para profesor y alumno, en caso de alumno lo hace por asignatura
+#-------------------------------------------------------------------------------
+
+def graficatipopreguntas(request, asign):
+	
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=="GET":
+			if request.user.is_staff:
+				#miro el colegio del alumno para poder filtrar tb por colegio
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				#obtengo su asignatura
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+
+				punt=Puntuaciones.objects.all()
+				#filtro por asignatura
+				punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
+				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
+
+				return render_to_response('charts/tipopreguntas.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
+
+				
+			else:
+			#si es alumno
+				try:
+					punt=Puntuaciones.objects.filter(usuario=usuario)
+					punt = punt.extra(where=['asignatura=%s'], params=[asign])
+				except:
+					error= "No se han encontrado datos"
+					return render_to_response('registration/grafica.html', {'error':error}, context_instance=RequestContext(request))
+
+				return render_to_response('charts/tipopreguntasalumno.html', {'puntuaciones':punt, 'asignatura':asign}, context_instance=RequestContext(request))
+
+
+		else:#si no es GET
+			return HttpResponseRedirect('/home')
+
+			
+	else:
+		return HttpResponseRedirect('/login')
+	
+#-------------------------------------------------------------------------------
+#devuelve la gráfica con las respuestas correctas e incorrectas por alumno
+#para profesor y alumno
+#-------------------------------------------------------------------------------
+
+def graficaaciertos(request, asign):
+	
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=="GET":
+			if request.user.is_staff:
+				#miro el colegio del alumno para poder filtrar tb por colegio
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				#obtengo su asignatura
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+
+				punt=Puntuaciones.objects.all()
+				#filtro por asignatura
+				punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
+				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
+
+
+				return render_to_response('charts/aciertosfallos.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
+
+				
+			else:
+			#si es alumno
+				try:
+					punt=Puntuaciones.objects.filter(usuario=usuario)
+					punt = punt.extra(where=['asignatura=%s'], params=[asign])
+					
+				except:
+					error= "No se han encontrado datos"
+					return render_to_response('registration/grafica.html', {'error':error}, context_instance=RequestContext(request))
+
+
+				return render_to_response('charts/aciertosfallosalumno.html', {'puntuaciones':punt, 'asignatura':asign}, context_instance=RequestContext(request))
+
+
+		else:#si no es GET
+			return HttpResponseRedirect('/home')
+
+			
+	else:
+		return HttpResponseRedirect('/login')
+
+
+
+
+#-------------------------------------------------------------------------------
+#mostraremos el listado de asignaturas para mostrar las graficas
+#-------------------------------------------------------------------------------
+
+def grafica(request):
+
+	template = get_template("registration/grafica.html")
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+			if request.user.is_staff:
+				return render_to_response('registration/grafica.html', {'lista':"true", 'profesor':usuario}, context_instance=RequestContext(request))
+			#si es alumno
+			else:
+				#le envio el listado de sus asignaturas matriculadas para que elija cual asignatura quiere
+				listaAsignaturas = AsignaturasAlumno.objects.filter(usuario=usuario)
+
+				return render_to_response('registration/grafica.html', {'alumno':usuario, 'listaAsignaturas':listaAsignaturas}, context_instance=RequestContext(request))
+	else:
+		return HttpResponseRedirect('/login')
+	
+#-------------------------------------------------------------------------------
+#mostraremos el listado de posibles graficas
+#-------------------------------------------------------------------------------
+def graficaporasignatura(request, asign):
+
+	template = get_template("registration/grafica.html")
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+			if request.user.is_staff:
+				return render_to_response('registration/grafica.html', {'lista':"true",'profesor':usuario}, context_instance=RequestContext(request))
+			#si es alumno
+			else:
+				return render_to_response('registration/grafica.html', {'lista':"true",'alumno':usuario, 'asignatura':asign}, context_instance=RequestContext(request))
+	else:
+		return HttpResponseRedirect('/login')
 
 
 
@@ -706,6 +1109,7 @@ def androidenviarespuestas(request):
 
 		
 		if escorrecta == "true":
+			usuario_puntos.npreguntascorrectas=usuario_puntos.npreguntascorrectas+1
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos+2
 			elif tipoPregunta=="extra":
@@ -713,6 +1117,7 @@ def androidenviarespuestas(request):
 			else:
 				usuario_puntos.puntos=usuario_puntos.puntos+1
 		else:
+			usuario_puntos.npreguntasincorrectas=usuario_puntos.npreguntasincorrectas+1
 			if tipoPregunta=="obligada":
 				usuario_puntos.puntos=usuario_puntos.puntos-1
 			elif tipoPregunta=="extra":
@@ -811,7 +1216,7 @@ def androidlistacorrectas(request, usuario):
 #devuelve el ranking de alumnos por puntos
 #-------------------------------------------------------------------------------
 
-def androidclasificacion(request):
+def androidclasificacion(request, usuario):
 
 	#p=Puntuaciones.objects.all()
 	#p=p.extra(order_by = ['-puntos'])
@@ -828,9 +1233,16 @@ def androidclasificacion(request):
 
 		asignatura = request.POST['asignatura']
 		
+		
+		#miro el colegio del alumno para poder filtrar tb por colegio
+		miusuario = User.objects.get(username=usuario)
+		usuario_colegio = miusuario.persona.colegio
+		
+		
 		punt=Puntuaciones.objects.all()
 		#filtro por asignatura
 		punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
+		punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
 		punt=punt.extra(order_by = ['-puntos'])
 
 		data = serializers.serialize("json",punt, fields=('usuario','puntos'))
@@ -871,17 +1283,43 @@ def androidsumapregunta(request, usuario):
 		pobligada=Puntuaciones.objects.get(usuario=user, asignatura=asignatura)
 		pobligada.preguntaobligada=pobligada.preguntaobligada+1
 		pobligada.save()
-		print ""
 
-		print "lego aqui1"
+	
+		
+
 		#convierto a smart_str para que no de erro de UnicodeEncodeError
 		mensa="ok="+asignatura
 		mensa = smart_str(mensa)
 
 		return HttpResponse(mensa)
 	except:
-		print "lego aqui80"
 		return HttpResponse("fail=fail")
+	
+	
+	
+	
+	
+	
+#-------------------------------------------------------------------------------
+#incremento de tiempo ocioso
+#-------------------------------------------------------------------------------
+
+def androidsumatiempoocioso(request, usuario):	
+	
+	#incrementamos su contador de "tiempo" ocioso
+	hoy=date.today()
+	print hoy
+	try:
+		#intento obtener de la base de datos(coincida dia y usuario), si no existe lo creo
+		#incremento 30 min ya que es lo que tiene puesto la app para lanzar notificaciones
+		tOcioso=MedidaOcioDiaria.objects.get(usuario=usuario, fecha=hoy)
+		tOcioso.nPreguntasdia=tOcioso.nPreguntasdia+30
+	#si no se encuentra lo creo, y le inicializo nPReguntasdiaa 1
+	except:
+		record1=MedidaOcioDiaria(usuario=usuario,fecha=hoy,nPreguntasdia=30)
+		record1.save()
+	#recordar que es una medida estimada
+	return HttpResponse("ok")
 
 #-------------------------------------------------------------------------------
 #devuelve el listado de lecciones para los alumnos
@@ -901,9 +1339,18 @@ def androidtips(request):
 	if request.method == "POST":
 		
 		asignatura = request.POST['asignatura']
+		usuario= request.POST['usuario']
+		
+		#miro el colegio del alumno para poder filtrar tb por colegio
+		miusuario = User.objects.get(username=usuario)
+		usuario_colegio = miusuario.persona.colegio
+		
+		
 		l=Tips.objects.all()
 		#filtro por asignatura
 		l = l.extra(where=['asignatura=%s'], params=[asignatura])
+		#filtro por colegio
+		l = l.extra(where=['colegio=%s'], params=[usuario_colegio])
 		l=l.extra(order_by = ['-fecha'])
 		data = serializers.serialize("json",l, fields=('leccion'))	
 		return HttpResponse("{\"tips\":"+data+"}")
@@ -1109,9 +1556,16 @@ def androidenviapreguntaextra(request, emisor, receptor):
 #devuelve el listado completo de asignaturas
 #-------------------------------------------------------------------------------
 
-def androidasignaturascompleto(request):
+def androidasignaturascompleto(request, usuario):
+
+	#miro el colegio del alumno para poder filtrar tb por colegio
+	miusuario = User.objects.get(username=usuario)
+	usuario_colegio = miusuario.persona.colegio
+
 
 	l=Asignaturas.objects.all()
+	l = l.extra(where=['colegio=%s'], params=[usuario_colegio])
+	
 	#l=l.extra(order_by = ['-profesor'])
 	data = serializers.serialize("json",l, fields=('asignatura','profesor'))
 	return HttpResponse("{\"asignaturas\":"+data+"}")
@@ -1140,6 +1594,11 @@ def androidasignaturasmatricula(request):
 		
 		usuario = request.POST['usuario']
 		asignatura = request.POST['asignatura']
+		
+		#miro el colegio del alumno para poder filtrar tb por colegio
+		miusuario = User.objects.get(username=usuario)
+		usuario_colegio = miusuario.persona.colegio
+		
 
 		try:
 			#miramos si ya existe la matricula
@@ -1159,11 +1618,11 @@ def androidasignaturasmatricula(request):
 		if (statusMatricula=="ok"):
 			#cuando se matricule de la asignatura le añadimos la puntuación y las preguntas que haya hasta el momento
 			#añadimos a la tabla de puntuaciones
-			puntuaciones= Puntuaciones(usuario=usuario, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0, asignatura=asignatura);
+			puntuaciones= Puntuaciones(usuario=usuario, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0, asignatura=asignatura, colegio=usuario_colegio, npreguntascorrectas=0,npreguntasincorrectas=0);
 			puntuaciones.save()
 			
-			#añadimos las preguntas existentes al nuevo usuario para que disponga de todas
-			listadopreguntas= PreguntasCompletas.objects.filter(asignatura=asignatura)
+			#añadimos las preguntas existentes al nuevo usuario para que disponga de todas (no olvidar filtrar por asignatura y colegio)
+			listadopreguntas= PreguntasCompletas.objects.filter(asignatura=asignatura, colegio=usuario_colegio)
 			for i in listadopreguntas:
 				usuario_pendiente = usuario
 				pregunta= i.pregunta

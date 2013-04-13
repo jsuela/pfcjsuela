@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Persona(models.Model):
+    usuario = models.OneToOneField(User)
+    colegio = models.TextField()
+
 class PreguntasCompletas(models.Model):
 	#ya no es primary key porque puede que se repitan preguntas en distintas asign
 	#usuario_pendiente=models.TextField()
@@ -12,6 +16,7 @@ class PreguntasCompletas(models.Model):
 	respuesta3=models.TextField()
 	respuesta3_correcta=models.TextField()
 	asignatura=models.TextField()
+	colegio=models.TextField()
 
 class PreguntasPendientes(models.Model):
 	usuario_pendiente=models.TextField()
@@ -40,6 +45,10 @@ class Puntuaciones(models.Model):
 	preguntarecibidaamistosa=models.IntegerField()
 	preguntaenviadaamistosa=models.IntegerField()
 	asignatura=models.TextField()
+	colegio=models.TextField()
+	npreguntasincorrectas=models.IntegerField()
+	npreguntascorrectas=models.IntegerField()
+
 
 class PreguntasVisibles(models.Model):
 	usuario_pendiente=models.TextField()
@@ -55,20 +64,29 @@ class Tips(models.Model):
 	leccion=models.TextField()
 	fecha=models.DateTimeField()
 	asignatura=models.TextField()
+	colegio=models.TextField()
 
 class CodigosGCM(models.Model):
 	usuario=models.TextField()
 	codigoGCM=models.TextField()
-	#asignatura=models.TextField()
-	
+
 class Asignaturas(models.Model):
+	#se pueden repetir asignaturas pero en distintos colegios
 	asignatura=models.TextField()
 	profesor=models.TextField()
+	colegio=models.TextField()
 
 class AsignaturasAlumno(models.Model):
 	asignatura=models.TextField()
 	usuario=models.TextField()
 	
+class Colegios(models.Model):
+	colegio=models.TextField()
 
+class MedidaOcioDiaria(models.Model):
+	#no depende de asignatura ya que es para aproximar el tiempo
+	usuario=models.TextField()
+	nPreguntasdia=models.IntegerField()
+	fecha=models.DateField()
 	
 

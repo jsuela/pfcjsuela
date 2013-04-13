@@ -35,40 +35,27 @@
 
 				</ul>
 			</li>
-			<li><a href="/grafica">Estadísticas</a></li>
-
-
-
-				<!--<li><a href="/leccion">Mis lecciones</a>
+			<li  class="current_page_item"><a href="/grafica">Estadísticas</a></li>
+			<li><a href="#">Mis lecciones</a>
 				<ul>
 					{% if profesor %}
 						<li><a href="/leccion/nueva">Nueva lección</a></li>
-						<li class="current_page_item"><a href="/leccion">Lecciones</a></li>
+						<li><a href="/leccion">Lecciones</a></li>
 					{% endif %}
 
 				</ul>
-			</li>-->
-
-
-			{% if profesor %}
-				<li><a href="/leccion">Mis lecciones</a>
-					<ul>
-						<li><a href="/leccion/nueva">Nueva lección</a></li>
-						<li class="current_page_item"><a href="/leccion">Lecciones</a></li>
-					</ul>
-				</li>
-			{% else %}
-				<li class="current_page_item"><a href="/leccion">Mis lecciones</a></li>
-			{% endif %}
-
-
+			</li>
+			
+			
 			<li><a href="#">Mi cuenta</a>
 				<ul>
 					<li><a href="/conf">Configurar</a></li>
 					<li><a href="/logout">Cerrar sesión</a></li>
 
+
 				</ul>
 			</li>
+			
 		</ul>
 	</div>
 	<!-- end #menu -->
@@ -77,71 +64,59 @@
 			<div id="page-bgbtm">
 				<div id="content">
 					<div class="post">
-					
+
 
 						<div class="entry">
-
 							<p>
 
+
 								{% block content %}
+								<h2>Estadísticas</h2>
+								<!-- Para el caso de que haya error o exito -->
+								{% if error %}
+									<h3> {{ error }} </h3>	
+									<h4><a href="/grafica">Volver al listado</a></h4>
 
+								{% elif listaAsignaturas %}
+									{% for l in listaAsignaturas %}
+
+										<li><h3><a href="/grafica/{{ l.asignatura }}">{{ l.asignatura }}</a></h3></li>			
+								
+									{% endfor %}
+								<!-- Para que elija usuario para mostrar grafica de tiempo -->
+								{% elif listadoalumnos %}
+
+									{% for l in listadoalumnos %}
+
+										<li><h3><a href="/grafica/tiempo/{{l.usuario}}">{{ l.usuario }}</a></h3></li>			
+								
+									{% endfor %}
+									<h4><a href="/grafica">Volver al listado</a></h4>
+
+								{% elif lista %}
+
+										
+										<li><h3><a href="/grafica/aciertos/{{asignatura}}">Aciertos vs. Fallos</a></h3></li>
+										<li><h3><a href="/grafica/tipopreguntas/{{asignatura}}">Tipo de preguntas realizadas</a></h3></li>
 										{% if profesor %}
-											{% if error %}
-												<h1> {{ error }}</h1> 
-												<h3><a href="javascript:history.back()">Volver atrás</h3>
-											{% elif exito %}
-												<h3> {{ exito }} <a href="/leccion">Volver atrás</a></h3>
-											<!--le muestro el listado de preguntas -->
-											{% else %}
-												<h1>Listado lecciones</h1>
-												{% if listadoprofesor %}
-													{% for l in listadoprofesor %}
-														<li><h3>{{ l.leccion }}</h3><h4>{{ l.asignatura }}, {{ l.fecha }}</h4></li>
-													{% endfor %}
-												{% else %}
-													<h4>No hay ninguna lección</h4>
-												{% endif %}
-											{% endif %}
-
-										{% elif alumno %}
-											{%if listaAsignaturas %}
-												<h2>Elige una de tus asignaturas</h2>
-												{% for l in listaAsignaturas %}
-			
-													<li><h3><a href="/leccion/{{ l.asignatura }}">{{ l.asignatura }}</a></h3></li>			
-											
-												{% endfor %}												
-											<!--le muestro el listado de preguntasde la asignatura escogida -->
-											{% elif listadoalumno %}
-											
-												<h1>Listado lecciones</h1>
-												<h3><a href="/leccion">Volver al listado de asignaturas</a></h3>
-												{% if listadoalumno %}
-													{% for l in listadoalumno %}
-														<li><h3>{{ l.leccion }}</h3><h4>{{ l.asignatura }}, {{ l.fecha }}</h4></li>
-													{% endfor %}
-												{% else %}
-													<h4>No hay ninguna lección</h4>
-												{% endif %}
-												
-											{%else%}
-												<h2>No se han encontrado lecciones</h2>
-											{% endif %}
-
-										{% else %}
-
-												<p>Inicia sesión pinchando <a href="/login">aquí. </a></p>	
-	
+											<li><h3><a href="/grafica/puntos">Ranking puntos</a></h3></li>
+											<li><h3><a href="/grafica/tiempo">Tiempo ocioso</a></h3></li>	
+		
 										{% endif %}
+										
+								{% else %}
+								
+									<h4>No hay datos</h4>
+								{% endif %}
+								
 
 								{% endblock %}
 
 
 
 
-
 							</p>
-
+							
 						</div>
 					</div>
 
@@ -164,6 +139,44 @@
 							</ul>
 						</li>
 
+						<li>
+							<h2>Twitter</h2>
+							<ul>
+
+
+								<script charset="utf-8" src="http://widgets.twimg.com/j/2/widget.js"></script>
+								<script>
+								new TWTR.Widget({
+								  version: 2,
+								  type: 'profile',
+								  rpp: 4,
+								  interval: 30000,
+								  width: 250,
+								  height: 300,
+								  theme: {
+									shell: {
+									  background: '#b8afb8',
+									  color: '#050505'
+									},
+									tweets: {
+									  background: '#f5edf5',
+									  color: '#030303',
+									  links: '#f70830'
+									}
+								  },
+								  features: {
+									scrollbar: false,
+									loop: false,
+									live: false,
+									behavior: 'all'
+								  }
+								}).render().setUser('urjc_sat').start();
+								</script>
+
+
+							</ul>
+						</li>
+
 					</ul>
 				</div>
 				<!-- end #sidebar -->
@@ -174,7 +187,7 @@
 	<!-- end #page -->
 </div>
 <div id="footer">
-	
+
 </div>
 <!-- end #footer -->
 </body>

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Gráficas</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script type="text/javascript">
+
+	$(function () {
+        $('#container').highcharts({
+            chart: {
+                type: 'column',
+                margin: [ 50, 50, 100, 80]
+            },
+            title: {
+                text: 'Puntuaciones {{asignatura}}'
+            },
+            xAxis: {
+                categories: [
+                	{% for data in puntuaciones %}
+						
+							'{{data.usuario}}',
+					{% endfor %}
+                ],
+
+                labels: {
+                    rotation: -45,
+                    align: 'right',
+                    style: {
+                        fontSize: '13px',
+                        fontFamily: 'Verdana, sans-serif'
+                    }
+                }
+            },
+            yAxis: {
+                
+                title: {
+                    text: 'Puntos'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                formatter: function() {
+                    return ''+
+                        this.x +': '+ this.y +' puntos';
+                }
+            },
+            series: [{
+                name: 'Alumnos',
+                data: [
+                    {% for data in puntuaciones %}
+						
+							{{data.puntos}},
+					{% endfor %}
+                
+                ]
+
+            }]
+        });
+    });
+
+
+
+		</script>
+	</head>
+	<body>
+		
+		<h3><a href="javascript:history.back()">Volver atrás</a></h3>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://code.highcharts.com/modules/exporting.js"></script>
+		
+		<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+
+	</body>
+</html>

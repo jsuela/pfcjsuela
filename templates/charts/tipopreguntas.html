@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Gráficas</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script type="text/javascript">
+
+$(function () {
+        $('#container').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Tipos de preguntas por alumno'
+            },
+            xAxis: {
+                categories: [
+                	{% for data in puntuaciones %}
+						
+							'{{data.usuario}}',
+					{% endfor %}
+                ]
+            },
+            yAxis: {
+                
+                title: {
+                    text: 'Cantidad'
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: 'Pregunta extra',
+                data: [{% for data in puntuaciones %}
+						
+							{{data.preguntaextra}},
+					{% endfor %}]
+            }, {
+                name: 'Pregunta obligada',
+                data: [{% for data in puntuaciones %}
+						
+							{{data.preguntaobligada}},
+					{% endfor %}]
+            }, {
+                name: 'Preguntas recibidas amistosas',
+                data: [{% for data in puntuaciones %}
+						
+							{{data.preguntarecibidaamistosa}},
+					{% endfor %}]
+            }, {
+                name: 'Preguntas enviadas amistosas',
+                data: [{% for data in puntuaciones %}
+						
+							{{data.preguntaenviadaamistosa}},
+					{% endfor %}]
+
+            }]
+        });
+    });
+
+
+
+		</script>
+	</head>
+	<body>
+		<h3><a href="javascript:history.back()">Volver atrás</a></h3>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://code.highcharts.com/modules/exporting.js"></script>
+		
+		<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+
+	</body>
+</html>

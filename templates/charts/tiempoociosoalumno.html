@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Gráficas</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script type="text/javascript">
+
+$(function () {
+        $('#container').highcharts({
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: 'Minutos aproximados de conexión a redes sociales'
+            },
+
+            xAxis: {
+                categories: [
+                	{% for data in tocio %}
+						
+							'{{data.fecha}}',
+					{% endfor %}
+                ],
+               
+
+                labels: {
+                    rotation: -45,
+                    align: 'right',
+                    style: {
+                        fontSize: '13px',
+                        fontFamily: 'Verdana, sans-serif'
+                    }
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Minutos aproximados'
+                }
+            },
+            tooltip: {
+                enabled: false,
+                formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+
+                        this.x +': '+ this.y +'minutos';
+                }
+            },
+            plotOptions: {
+                line: {
+                    dataLabels: {
+                        enabled: true
+                    },
+                    enableMouseTracking: false
+                }
+            },
+            series: [{
+                name: 'Tiempo estimado',
+                data: [
+                    {% for data in tocio %}
+						
+							{{data.nPreguntasdia}},
+					{% endfor %}
+                
+                ]
+            }]
+        });
+    });
+
+
+
+		</script>
+	</head>
+	<body>
+		<h3><a href="javascript:history.back()">Volver atrás</a></h3>
+		<script src="http://code.highcharts.com/highcharts.js"></script>
+		<script src="http://code.highcharts.com/modules/exporting.js"></script>
+		
+		<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+
+	</body>
+</html>
+
