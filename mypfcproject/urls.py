@@ -24,6 +24,9 @@ urlpatterns = patterns('',
     url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
     url(r'^leccion/(?P<asign>.*)$', 'pfcapp.views.leccionporasignatura', name='leccionporasignatura'),
     url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
+    url(r'^edita/(?P<user>.*)$', 'pfcapp.views.editausuario', name='editausuario'),
+    url(r'^edita', 'pfcapp.views.edita', name='edita'),
+
     
 
 
@@ -48,6 +51,7 @@ urlpatterns = patterns('',
 	#android
     url(r'^android/clasificacion/(?P<usuario>.*)$', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
 	url(r'^android/login', 'pfcapp.views.androidlogin', name='androidlogin'),
+	url(r'^android/signin', 'pfcapp.views.androidsignin', name='androidsignin'),
 	url(r'^android/enviarespuestas', 'pfcapp.views.androidenviarespuestas', name='androidenviarespuestas'),
 	url(r'^android/sumapregunta/(?P<usuario>.*)$', 'pfcapp.views.androidsumapregunta', name='androidsumapregunta'),
 	url(r'^android/sumatiempo/(?P<usuario>.*)$', 'pfcapp.views.androidsumatiempoocioso', name='androidsumatiempoocioso'),
@@ -60,6 +64,7 @@ urlpatterns = patterns('',
     url(r'^android/asignaturas/listado/completo/(?P<usuario>.*)$', 'pfcapp.views.androidasignaturascompleto', name='androidasignaturascompleto'),
     url(r'^android/asignaturas/listado/(?P<usuario>.*)$', 'pfcapp.views.androidasignaturasusuario', name='androidasignaturasusuario'),
     url(r'^android/asignaturas/matricula', 'pfcapp.views.androidasignaturasmatricula', name='androidasignaturasmatricula'),
+    url(r'^android/colegios', 'pfcapp.views.androidcolegios', name='androidcolegios'),
 
 
 

@@ -22,7 +22,7 @@
 	<!-- end #header -->
 	<div id="menu">
 		<ul class="nav">
-			<li><a href="/home">Ranking</a></li>
+			<li class="current_page_item"><a href="/home">Ranking</a></li>
 			<li><a href="#">Mis preguntas</a>
 				<ul>
 					{% if profesor %}
@@ -35,7 +35,7 @@
 
 				</ul>
 			</li>
-			<li  class="current_page_item"><a href="/grafica">Estadísticas</a></li>
+			<li><a href="/grafica">Estadísticas</a></li>
 			<li><a href="#">Mis lecciones</a>
 				<ul>
 					{% if profesor %}
@@ -71,44 +71,78 @@
 
 
 								{% block content %}
-								<h2>Estadísticas</h2>
+
+								{% if user %}
+									<h1>¡Hola, {{ user }}!</h1>
+
+								{% else %}
+									<h2>Bienvenido, usuario. Por favor logueate.</h2>
+								{% endif %}
+
 								<!-- Para el caso de que haya error o exito -->
 								{% if error %}
-									<h3> {{ error }} </h3>	
-									<h4><a href="/grafica">Volver al listado</a></h4>
 
+
+									<h3> {{ error }} </h3>	
+
+								{% endif %}
+
+								{% if exito %}
+
+
+									<h3> {{ exito }} </h3>	
+
+								{% endif %}
+
+
+
+
+
+								<!-- Para el ranking -->
+								{% if ranking %}
+									{% if profesor %}
+										<h2>Ranking {{ asignatura }}</h2>
+										<h4><a href="/home">Volver al ranking</a></h4>
+									{% else %}
+										<h2>Ranking {{ asignatura }}</h2>
+										<h3><a href="/home">Volver al listado de asignaturas</a></h3>
+									{% endif %}
+									{% for r in ranking %}
+									
+									
+									
+									
+										<script type="text/javascript">
+										function eliminarUsuario(nombre) {
+	
+											if(confirm("¿Quieres eliminar al usuario?")) {
+	
+												document.location.href= '/edita/'+nombre;
+	
+											}
+	
+										} 
+										</script>
+	
+										<li><h3>{{ r.usuario }}</h3>  <h4><a href="#" onclick="eliminarUsuario('{{ r.usuario }}');">eliminar</a></h4></li>
+									
+								
+									{% endfor %}
+									
 								{% elif listaAsignaturas %}
+									<h2>Elige una de tus asignaturas</h2>
+
 									{% for l in listaAsignaturas %}
 
-										<li><h3><a href="/grafica/{{ l.asignatura }}">{{ l.asignatura }}</a></h3></li>			
+										<li><h3><a href="/ranking/{{ l.asignatura }}">{{ l.asignatura }}</a></h3></li>			
 								
 									{% endfor %}
-								<!-- Para que elija usuario para mostrar grafica de tiempo -->
-								{% elif listadoalumnos %}
-
-									{% for l in listadoalumnos %}
-
-										<li><h3><a href="/grafica/tiempo/{{l.usuario}}">{{ l.usuario }}</a></h3></li>			
 								
-									{% endfor %}
-									<h4><a href="/grafica">Volver al listado</a></h4>
-
-								{% elif lista %}
-
-										
-										<li><h3><a href="/grafica/aciertos/{{asignatura}}">Aciertos vs. Fallos</a></h3></li>
-										<li><h3><a href="/grafica/tipopreguntas/{{asignatura}}">Tipo de preguntas realizadas</a></h3></li>
-										{% if profesor %}
-											<li><h3><a href="/grafica/puntos">Ranking puntos</a></h3></li>
-											<li><h3><a href="/grafica/tiempo">Tiempo ocioso</a></h3></li>	
-		
-										{% endif %}
-										
 								{% else %}
-								
-									<h4>No hay datos</h4>
+									<h2>No hay puntuaciones para mostrar</h2>
+
 								{% endif %}
-								
+
 
 								{% endblock %}
 

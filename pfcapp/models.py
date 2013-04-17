@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class Persona(models.Model):
     usuario = models.OneToOneField(User)
     colegio = models.TextField()
+    nombreyapellidos=models.TextField()
 
 class PreguntasCompletas(models.Model):
 	#ya no es primary key porque puede que se repitan preguntas en distintas asign

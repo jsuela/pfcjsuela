@@ -97,6 +97,102 @@ def ranking(request, asign):
 
 	else:
 		return HttpResponseRedirect('/login')
+	
+	
+
+	
+#-------------------------------------------------------------------------------
+#muestra lista para borrar alumnos no deseados
+#-------------------------------------------------------------------------------
+
+def editausuario(request, user):
+	print "hola"
+	print user
+	user=str(user)
+	template = get_template("registration/edita.html")
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+
+			if request.user.is_staff:
+				profesor=usuario
+				
+				miusuario = User.objects.get(username=user)
+				miusuario.persona.delete()
+
+				print "hola"
+				PreguntasPendientes.objects.filter(usuario_pendiente=user).delete()
+				
+				print "hola2"
+				PreguntasRespondidas.objects.filter(usuario_no_pendiente=user).delete()
+
+				print "hola3"
+				Puntuaciones.objects.filter(usuario=user).delete()
+	
+				print "hola4"
+				PreguntasVisibles.objects.filter(usuario_pendiente=user).delete()
+
+				print "hola5"
+				CodigosGCM.objects.filter(usuario=user).delete()
+
+				
+				print "hola6"
+				AsignaturasAlumno.objects.filter(usuario=user).delete()
+
+				print "hola7"
+				MedidaOcioDiaria.objects.filter(usuario=user).delete()
+
+				print "hola8"
+				p=User.objects.get(username__exact=user)
+				p.delete()
+
+				return HttpResponse(template.render(Context({'user':usuario,'profesor':profesor,'asignatura':'','ranking':'', 'listaAsignaturas':''})))
+			#si es alumno
+			else:
+				return HttpResponseRedirect('/home')
+	else:
+		return HttpResponseRedirect('/login')
+
+
+
+#-------------------------------------------------------------------------------
+#muestra lista para borrar alumnos no deseados
+#-------------------------------------------------------------------------------
+
+def edita(request):
+
+	template = get_template("registration/edita.html")
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.method=='GET':
+			ranking=Puntuaciones.objects.all()
+			ranking=ranking.extra(order_by = ['-puntos'])
+
+
+			if request.user.is_staff:
+				profesor=usuario
+
+				#para que muestre la asignatura que imparte
+				a=Asignaturas.objects.get(profesor=profesor)
+				asignatura=a.asignatura
+				#y filtro para que solo aparezcan sus alumnos
+				ranking= ranking.extra(where=['asignatura=%s'], params=[asignatura])
+				#y filtro para que sean solo los de su colegio ya que puede haber dos asignaturas con elmismo nombre
+				#en distrintos colegios
+				u = User.objects.get(username=usuario)
+				usuario_colegio = u.persona.colegio
+				
+				ranking= ranking.extra(where=['colegio=%s'], params=[usuario_colegio])
+				
+				listaAsignaturas=''
+				
+				return HttpResponse(template.render(Context({'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas})))
+			#si es alumno
+			else:
+				return HttpResponseRedirect('/home')
+	else:
+		return HttpResponseRedirect('/login')
+	
 
 
 #-------------------------------------------------------------------------------
@@ -162,6 +258,7 @@ def signin(request):
 					password=request.POST['password']
 					password2=request.POST['password2']
 					colegio=request.POST['colegio']
+					nombreyapellidos=request.POST['nombreyapellidos']
 
 					email=request.POST['email']
 					if (password=="") or (email==""):
@@ -180,7 +277,7 @@ def signin(request):
 						user = User.objects.create_user(username,email,password)
 						user.save()
 						
-						record1=Persona(usuario=user, colegio=colegio)
+						record1=Persona(usuario=user, colegio=colegio, nombreyapellidos=nombreyapellidos)
 						record1.save()	
 						
 ############################################################################################################################################################################################
@@ -248,6 +345,7 @@ def signinprofesor(request):
 						password=request.POST['password']
 						password2=request.POST['password2']
 						asignatura=request.POST['asignatura']
+						nombreyapellidos=request.POST['nombreyapellidos']
 						
 						#comprobamos si ya existe alguna asignatura identica
 						try:
@@ -288,10 +386,10 @@ def signinprofesor(request):
 								user.save()
 								#almaceno el cole al que pertenece
 								if (colegio=="Elija Colegio"):
-									record1=Persona(usuario=user, colegio=colegioAlta)
+									record1=Persona(usuario=user, colegio=colegioAlta, nombreyapellidos=nombreyapellidos)
 									
 								else:
-									record1=Persona(usuario=user, colegio=colegio)
+									record1=Persona(usuario=user, colegio=colegio, nombreyapellidos=nombreyapellidos)
 								record1.save()	
 								
 								#miro si es un colegio nuevo o ya existía, si colegio esta en blanco , sino no almacena
@@ -874,7 +972,7 @@ def graficatiempousuario(request, user):
 				tocio=MedidaOcioDiaria.objects.filter(usuario=user)
 				#filtro por asignatura
 				#tocio = tocio.extra(where=['usuario=%s'], params=[usuario])
-				tocio=tocio.extra(order_by = ['-fecha'])
+				tocio=tocio.extra(order_by = ['fecha'])
 
 
 
@@ -1034,6 +1132,50 @@ def graficaporasignatura(request, asign):
 #							ANDROID											   #
 #------------------------------------------------------------------------------#
 ################################################################################
+
+
+#-------------------------------------------------------------------------------
+#Signin
+#-------------------------------------------------------------------------------
+
+def androidsignin(request):
+
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+
+	if request.method == "POST":
+
+		username = request.POST['user']
+
+		#solo compruebo si existia el alumno, las demás comprobaciones las hago en la app
+		try:
+			u = User.objects.get(username__exact=username)
+			if str(u) == str(username):
+				return HttpResponseServerError()
+		except User.DoesNotExist:
+			password = request.POST['password']
+			password2 = request.POST['password2']
+			nombreyapellidos = request.POST['nombreyapellidos']
+			email = request.POST['correo']
+			colegio = request.POST['colegio']
+			
+			user = User.objects.create_user(username,email,password)
+			user.save()
+						
+			record1=Persona(usuario=user, colegio=colegio, nombreyapellidos=nombreyapellidos)
+			record1.save()
+			
+
+			print unicode(csrf(request)['csrf_token'])
+			return HttpResponse('',unicode(c))
+
+
+
+	elif request.method == "GET":
+
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
 
 #-------------------------------------------------------------------------------
 #Login
@@ -1314,10 +1456,13 @@ def androidsumatiempoocioso(request, usuario):
 		#incremento 30 min ya que es lo que tiene puesto la app para lanzar notificaciones
 		tOcioso=MedidaOcioDiaria.objects.get(usuario=usuario, fecha=hoy)
 		tOcioso.nPreguntasdia=tOcioso.nPreguntasdia+30
+		tOcioso.save()
+		print "se lo suma"
 	#si no se encuentra lo creo, y le inicializo nPReguntasdiaa 1
 	except:
 		record1=MedidaOcioDiaria(usuario=usuario,fecha=hoy,nPreguntasdia=30)
 		record1.save()
+		print "lo inicia"
 	#recordar que es una medida estimada
 	return HttpResponse("ok")
 
@@ -1647,8 +1792,15 @@ def androidasignaturasmatricula(request):
 		print unicode(csrf(request)['csrf_token'])
 		return HttpResponse('',unicode(c))
 	
-	
-	
+#-------------------------------------------------------------------------------
+#devuelve el listado de colegios para completar el signin
+#-------------------------------------------------------------------------------	
+
+def androidcolegios(request):
+
+	l=Colegios.objects.all()
+	data = serializers.serialize("json",l, fields=('colegio'))
+	return HttpResponse("{\"colegios\":"+data+"}")
 	
 	
 
