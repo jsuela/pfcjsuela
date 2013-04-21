@@ -21,6 +21,7 @@ urlpatterns = patterns('',
 	url(r'^contact', 'pfcapp.views.contact', name='contact'),
 	url(r'^mispreguntas1', 'pfcapp.views.mispreguntas1', name='mispreguntas1'),
 	url(r'^mispreguntas2', 'pfcapp.views.mispreguntas2', name='mispreguntas2'),
+	url(r'^leccion/comentarios', 'pfcapp.views.leccioncomentarios', name='leccioncomentarios'),
     url(r'^leccion/nueva', 'pfcapp.views.leccionnueva', name='leccionnueva'),
     url(r'^leccion/(?P<asign>.*)$', 'pfcapp.views.leccionporasignatura', name='leccionporasignatura'),
     url(r'^leccion', 'pfcapp.views.leccion', name='leccion'),
@@ -65,6 +66,7 @@ urlpatterns = patterns('',
     url(r'^android/asignaturas/listado/(?P<usuario>.*)$', 'pfcapp.views.androidasignaturasusuario', name='androidasignaturasusuario'),
     url(r'^android/asignaturas/matricula', 'pfcapp.views.androidasignaturasmatricula', name='androidasignaturasmatricula'),
     url(r'^android/colegios', 'pfcapp.views.androidcolegios', name='androidcolegios'),
+    url(r'^android/comentario', 'pfcapp.views.androidcomentario', name='androidcomentario'),
 
 
 

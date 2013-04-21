@@ -15,7 +15,7 @@
 		<div id="header">
 			<div id="logo">
 				<h1><a href="#">Preguntas'R'us </a></h1>
-				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">X</a></p>
+				<p>Aplicación educativa</p>
 			</div>
 		</div>
 	</div>
@@ -36,11 +36,12 @@
 				</ul>
 			</li>
 			<li><a href="/grafica">Estadísticas</a></li>
-			<li><a href="#">Mis lecciones</a>
+			<li><a href="/leccion">Mis lecciones</a>
 				<ul>
 					{% if profesor %}
 						<li><a href="/leccion/nueva">Nueva lección</a></li>
 						<li><a href="/leccion">Lecciones</a></li>
+						<li><a href="/leccion/comentarios">Comentarios</a></li>
 					{% endif %}
 
 				</ul>
@@ -161,55 +162,18 @@
 				<div id="sidebar">
 					<ul>
 						<li>
-							<h2>Asignatura X</h2>
-							<p>Bla bla bla bla blabla blabla blabla blabla blabla blabla blabla blabla bla</p>
-						</li>
-						<li>
 							<h2>Enlaces</h2>
 							<ul>
 								<li><a href="http://pfc-jsuelaplaza.libresoft.es/descarga/Preguntaras.apk">Enlace App</a></li>
 								<li><a href="http://docencia.etsit.urjc.es/moodle/">Moodle</a></li>
-								<li><a href="https://twitter.com/urjc_sat/">Twitter X</a></li>
 							</ul>
 						</li>
-
 						<li>
-							<h2>Twitter</h2>
-							<ul>
-
-
-								<script charset="utf-8" src="http://widgets.twimg.com/j/2/widget.js"></script>
-								<script>
-								new TWTR.Widget({
-								  version: 2,
-								  type: 'profile',
-								  rpp: 4,
-								  interval: 30000,
-								  width: 250,
-								  height: 300,
-								  theme: {
-									shell: {
-									  background: '#b8afb8',
-									  color: '#050505'
-									},
-									tweets: {
-									  background: '#f5edf5',
-									  color: '#030303',
-									  links: '#f70830'
-									}
-								  },
-								  features: {
-									scrollbar: false,
-									loop: false,
-									live: false,
-									behavior: 'all'
-								  }
-								}).render().setUser('urjc_sat').start();
-								</script>
-
-
-							</ul>
+							<h2>Contacto</h2>
+							<p>Cualquier problema escribir a: j.suelaplaza@gmail.com</p>
 						</li>
+
+						
 
 					</ul>
 				</div>

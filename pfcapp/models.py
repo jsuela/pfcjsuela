@@ -90,4 +90,10 @@ class MedidaOcioDiaria(models.Model):
 	nPreguntasdia=models.IntegerField()
 	fecha=models.DateField()
 	
+class Comentarios(models.Model):
+	usuario=models.TextField()
+	fecha=models.DateTimeField()
+	asignatura=models.TextField()
+	colegio=models.TextField()
+	comentario=models.TextField()
 

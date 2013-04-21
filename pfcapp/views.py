@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseNotFound, HttpRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.contrib.auth.models import User
-from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno, Colegios, Persona, MedidaOcioDiaria
+from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno, Colegios, Persona, MedidaOcioDiaria, Comentarios
 from django.core.context_processors import csrf
 from django.contrib.auth import authenticate
 
@@ -811,6 +811,42 @@ def leccion(request):
 			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
 	else:
 		return HttpResponseRedirect('/login')
+
+
+#-------------------------------------------------------------------------------
+#Muestra los comentarios enviados por el alumno al profesor
+#-------------------------------------------------------------------------------
+
+def leccioncomentarios(request):
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+	if request.user.is_authenticated():
+		usuario=request.user.username
+		if request.user.is_staff:
+			if request.method=='GET':
+				#obtengo el nombre de la asignatura con el nombre del profesor y su colegio					
+				miusuario = User.objects.get(username=usuario)
+				usuario_colegio = miusuario.persona.colegio
+				
+				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
+				asignatura=asignat.asignatura
+				#filtro
+				listado=Comentarios.objects.all()
+				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
+				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
+				listado=listado.extra(order_by = ['-fecha'])
+				return render_to_response('registration/leccioncomentarios.html', {'profesor':usuario, 'listadocomentarios':listado}, context_instance=RequestContext(request))
+			#si no es GET muestro error
+			else:
+				return render_to_response('registration/leccioncomentarios.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
+		#si es alumno
+		else:
+			return HttpResponseRedirect('/home')
+	else:
+		return HttpResponseRedirect('/login')
+
+
 
 
 
@@ -1801,9 +1837,41 @@ def androidcolegios(request):
 	l=Colegios.objects.all()
 	data = serializers.serialize("json",l, fields=('colegio'))
 	return HttpResponse("{\"colegios\":"+data+"}")
-	
-	
 
+#-------------------------------------------------------------------------------
+#recibe el comentario de un alumno
+#-------------------------------------------------------------------------------	
+
+def androidcomentario(request):
+
+
+	#csrftoken
+	c={}
+	c.update(csrf(request))
+
+
+	if request.method == "POST":
+		asignatura = request.POST['asignatura']
+		user = request.POST['user']
+		comentario = request.POST['comentario']
+
+		try:
+			#almaceno, para ello apunto tambien la fecha y el colegio
+			fecha=datetime.now()
+			
+			u = User.objects.get(username=user)
+			usuario_colegio = u.persona.colegio
+			
+			record=Comentarios(usuario=user,fecha=fecha, asignatura= asignatura,colegio=usuario_colegio,comentario=comentario)
+			record.save()
+		
+			return HttpResponse("ok")
+		except:
+			return HttpResponse("fail")
+	
+	elif request.method == "GET":
+		print unicode(csrf(request)['csrf_token'])
+		return HttpResponse('',unicode(c))
 
 
 

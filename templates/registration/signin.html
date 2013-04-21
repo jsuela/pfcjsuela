@@ -39,7 +39,7 @@
 								<p>Repite contraseña: <input type="password" name="password2"></p>
 								<p>Nombre y apellidos: <input type="text" name="nombreyapellidos"></p>
 								<p>E-mail: <input type="text" name="email"></p>
-								<p>Colegio*: <select name = "colegio">
+								<p>Colegio o Universidad*: <select name = "colegio">
 									<option selected>Elija Colegio
 									{% for l in lcolegios %}
 										<option value="{{ l.colegio }}">{{ l.colegio }}</option>
@@ -53,7 +53,7 @@
 
 						
 							<p>Si eres profesor <a href="/signin/profesor">pincha aquí. </a></p>	
-							<h5>*Si no encuentras tu colegio, avisa a tu profesor para darlo de alta</h5>
+							<h5>*Si no encuentras tu colegio o universidad, avisa a tu profesor para darlo de alta</h5>
 						
 						{% endif %}
 				{% endif %}

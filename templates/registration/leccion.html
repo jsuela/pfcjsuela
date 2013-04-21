@@ -15,7 +15,7 @@
 		<div id="header">
 			<div id="logo">
 				<h1><a href="#">Preguntas'R'us </a></h1>
-				<p>Asignatura <a href="http://docencia.etsit.urjc.es/moodle/">X</a></p>
+				<p>Aplicación educativa</p>
 			</div>
 		</div>
 	</div>
@@ -55,6 +55,7 @@
 					<ul>
 						<li><a href="/leccion/nueva">Nueva lección</a></li>
 						<li class="current_page_item"><a href="/leccion">Lecciones</a></li>
+						<li><a href="/leccion/comentarios">Comentarios</a></li>
 					</ul>
 				</li>
 			{% else %}
@@ -93,18 +94,26 @@
 												<h3> {{ exito }} <a href="/leccion">Volver atrás</a></h3>
 											<!--le muestro el listado de preguntas -->
 											{% else %}
-												<h1>Listado lecciones</h1>
+												
 												{% if listadoprofesor %}
+													<h1>Listado lecciones</h1>
 													{% for l in listadoprofesor %}
 														<li><h3>{{ l.leccion }}</h3><h4>{{ l.asignatura }}, {{ l.fecha }}</h4></li>
 													{% endfor %}
+												{% elif listadocomentarios%}
+													<h1>Listado comentarios</h1>
+													{% for l in listadocomentarios %}
+														<li><h3>{{ l.usuario }}</h3><h4>{{ l.comentario }}, {{ l.fecha }}</h4></li>
+													{% endfor %}
 												{% else %}
-													<h4>No hay ninguna lección</h4>
+													<h1>Listado lecciones</h1>
+													<h4>No hay datos</h4>
 												{% endif %}
 											{% endif %}
 
 										{% elif alumno %}
 											{%if listaAsignaturas %}
+												
 												<h2>Elige una de tus asignaturas</h2>
 												{% for l in listaAsignaturas %}
 			
@@ -152,16 +161,15 @@
 				<div id="sidebar">
 					<ul>
 						<li>
-							<h2>Asignatura X</h2>
-							<p>Bla bla bla bla blabla blabla blabla blabla blabla blabla blabla blabla bla</p>
-						</li>
-						<li>
 							<h2>Enlaces</h2>
 							<ul>
 								<li><a href="http://pfc-jsuelaplaza.libresoft.es/descarga/Preguntaras.apk">Enlace App</a></li>
 								<li><a href="http://docencia.etsit.urjc.es/moodle/">Moodle</a></li>
-								<li><a href="https://twitter.com/urjc_sat/">Twitter X</a></li>
 							</ul>
+						</li>
+						<li>
+							<h2>Contacto</h2>
+							<p>Cualquier problema escribir a: j.suelaplaza@gmail.com</p>
 						</li>
 
 					</ul>
