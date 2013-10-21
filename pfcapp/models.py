@@ -7,8 +7,6 @@ class Persona(models.Model):
     nombreyapellidos=models.TextField()
 
 class PreguntasCompletas(models.Model):
-	#ya no es primary key porque puede que se repitan preguntas en distintas asign
-	#usuario_pendiente=models.TextField()
 	pregunta=models.TextField()
 	respuesta=models.TextField()
 	respuesta1_correcta=models.TextField()

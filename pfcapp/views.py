@@ -5,17 +5,12 @@ from django.contrib.auth.models import User
 from pfcapp.models import PreguntasPendientes, PreguntasCompletas, PreguntasRespondidas, Puntuaciones, PreguntasVisibles, Tips, CodigosGCM, Asignaturas, AsignaturasAlumno, Colegios, Persona, MedidaOcioDiaria, Comentarios
 from django.core.context_processors import csrf
 from django.contrib.auth import authenticate
-
 from django.template.loader import get_template
 from django.template import Context, RequestContext
-
 from django.utils import simplejson
 from django.core import serializers
-
 from datetime import datetime, date
-
 import httplib, urllib
-
 from django.utils.encoding import smart_str
 
 #-------------------------------------------------------------------------------
@@ -30,7 +25,6 @@ def home(request):
 		if request.method=='GET':
 			ranking=Puntuaciones.objects.all()
 			ranking=ranking.extra(order_by = ['-puntos'])
-
 
 			if request.user.is_staff:
 				profesor=usuario
@@ -71,8 +65,7 @@ def ranking(request, asign):
 		if request.method=='GET':
 			if request.user.is_staff:
 				return HttpResponseRedirect('/home')
-			else:
-				
+			else:				
 				profesor=''
 				asignatura=asign
 				listaAsignaturas=''
@@ -92,22 +85,15 @@ def ranking(request, asign):
 				#filtro también por colegio por si hubiese la misma asignatura en colegios distintos
 				ranking= ranking.extra(where=['colegio=%s'], params=[usuario_colegio])
 
-				return render_to_response('registration/inicioautes.html', {'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas}, context_instance=RequestContext(request))			
-				
-
+				return render_to_response('registration/inicioautes.html', {'user':usuario,'profesor':profesor,'asignatura':asignatura,'ranking':ranking, 'listaAsignaturas':listaAsignaturas}, context_instance=RequestContext(request))							
 	else:
 		return HttpResponseRedirect('/login')
-	
-	
-
 	
 #-------------------------------------------------------------------------------
 #muestra lista para borrar alumnos no deseados
 #-------------------------------------------------------------------------------
 
 def editausuario(request, user):
-	print "hola"
-	print user
 	user=str(user)
 	template = get_template("registration/edita.html")
 	if request.user.is_authenticated():
@@ -120,29 +106,20 @@ def editausuario(request, user):
 				miusuario = User.objects.get(username=user)
 				miusuario.persona.delete()
 
-				print "hola"
 				PreguntasPendientes.objects.filter(usuario_pendiente=user).delete()
 				
-				print "hola2"
 				PreguntasRespondidas.objects.filter(usuario_no_pendiente=user).delete()
 
-				print "hola3"
 				Puntuaciones.objects.filter(usuario=user).delete()
 	
-				print "hola4"
 				PreguntasVisibles.objects.filter(usuario_pendiente=user).delete()
 
-				print "hola5"
 				CodigosGCM.objects.filter(usuario=user).delete()
 
-				
-				print "hola6"
 				AsignaturasAlumno.objects.filter(usuario=user).delete()
 
-				print "hola7"
 				MedidaOcioDiaria.objects.filter(usuario=user).delete()
 
-				print "hola8"
 				p=User.objects.get(username__exact=user)
 				p.delete()
 
@@ -152,8 +129,6 @@ def editausuario(request, user):
 				return HttpResponseRedirect('/home')
 	else:
 		return HttpResponseRedirect('/login')
-
-
 
 #-------------------------------------------------------------------------------
 #muestra lista para borrar alumnos no deseados
@@ -167,17 +142,14 @@ def edita(request):
 		if request.method=='GET':
 			ranking=Puntuaciones.objects.all()
 			ranking=ranking.extra(order_by = ['-puntos'])
-
-
 			if request.user.is_staff:
 				profesor=usuario
-
 				#para que muestre la asignatura que imparte
 				a=Asignaturas.objects.get(profesor=profesor)
 				asignatura=a.asignatura
 				#y filtro para que solo aparezcan sus alumnos
 				ranking= ranking.extra(where=['asignatura=%s'], params=[asignatura])
-				#y filtro para que sean solo los de su colegio ya que puede haber dos asignaturas con elmismo nombre
+				#y filtro para que sean solo los de su colegio ya que puede haber dos asignaturas con el mismo nombre
 				#en distrintos colegios
 				u = User.objects.get(username=usuario)
 				usuario_colegio = u.persona.colegio
@@ -193,8 +165,6 @@ def edita(request):
 	else:
 		return HttpResponseRedirect('/login')
 	
-
-
 #-------------------------------------------------------------------------------
 #mostraremos la info de contacto
 #-------------------------------------------------------------------------------
@@ -280,23 +250,6 @@ def signin(request):
 						record1=Persona(usuario=user, colegio=colegio, nombreyapellidos=nombreyapellidos)
 						record1.save()	
 						
-############################################################################################################################################################################################
-#hecho en matricular asignatura						#añadimos a la tabla de puntuaciones
-						#puntuaciones= Puntuaciones(usuario=username, puntos=0, preguntaextra=0, preguntaobligada=0, preguntarecibidaamistosa=0, preguntaenviadaamistosa=0);
-						#puntuaciones.save()
-
-						#añadimos las preguntas existentes al nuevo usuario para que disponga de todas
-						#listadopreguntas= PreguntasCompletas.objects.all()
-						#for i in listadopreguntas:
-						#	usuario_pendiente = username
-						#	pregunta= i.pregunta
-						#	respuesta= i.respuesta
-						#	respuesta2= i.respuesta2
-						#	respuesta3= i.respuesta3
-						#	record=PreguntasPendientes(usuario_pendiente=usuario_pendiente,pregunta=pregunta,respuesta=respuesta,respuesta2=respuesta2, respuesta3=respuesta3)
-						#	record.save()
-############################################################################################################################################################################################							
-
 						sign = "Tu registro se ha realizado con éxito, ya puedes iniciar sesión también en la aplicación móvil"
 						return render_to_response('registration/signin.html', {'user':username,'exito':sign}, context_instance=RequestContext(request))
 		elif request.method == "GET":
@@ -453,13 +406,10 @@ def mispreguntas1(request):
 				elif ((respuesta=='') or (respuesta2=='') or (respuesta3=='')):
 					formFail= "Error! Rellena todos los campos"
 					return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
-				else:
-
-					
+				else:					
 
 					Usuarios= User.objects.all()
 					
-
 					#compruebo si ya esxitia la pregunta, si exsitia doy error, si no, almaceno
 					try:
 						#miro la asignatura del profesor
@@ -471,7 +421,6 @@ def mispreguntas1(request):
 						u=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 						asignatura = u.asignatura
 						pexiste=PreguntasCompletas.objects.get(pregunta=pregunta, asignatura=asignatura, colegio=usuario_colegio)
-						#if (str(pexiste.pregunta)!=str("")):
 					except PreguntasCompletas.DoesNotExist:
 						#miro la asignatura del profesor
 						usuario=request.user.username
@@ -499,10 +448,6 @@ def mispreguntas1(request):
 					formFail= "Error! La pregunta ya existe"
 					return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':formFail}, context_instance=RequestContext(request))
 
-
-
-
-   
 			#si no es ni GET ni POST
 			else:
 				return render_to_response('registration/formulario1.html', {'profesor':usuario,'error':"Error"}, context_instance=RequestContext(request))
@@ -541,8 +486,7 @@ def mispreguntas2(request):
 				
 				listado=PreguntasCompletas.objects.all()
 				listado=listado.extra(where=['asignatura=%s'], params=[asignatura])
-				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])
-				
+				listado=listado.extra(where=['colegio=%s'], params=[usuario_colegio])				
 				
 				return render_to_response('registration/formulario2.html', {'profesor':usuario, 'listadoprofesor':listado}, context_instance=RequestContext(request))
 			#si no es GET muestro error
@@ -601,8 +545,6 @@ def conf(request):
 	else:
 		return HttpResponseRedirect('/login')
 
-
-
 #-------------------------------------------------------------------------------
 #Si es alumno devuelve las lecciones
 #si es profesor formulario para añadir lecciones
@@ -638,13 +580,11 @@ def leccionnueva(request):
 						#miro el colegio del profesor para poder filtrar tb por colegio
 						miusuario = User.objects.get(username=usuario)
 						usuario_colegio = miusuario.persona.colegio
-						
-						
+												
 						u=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 						asignatura = u.asignatura
 						#miro que alumno tiene matriculada la asignatura
 						listadoalumnos= AsignaturasAlumno.objects.filter(asignatura=asignatura)
-
 												
 						#obtengo los codigos y posteriormente mirare si debo enviar o no
 						listadocodigos= CodigosGCM.objects.all()
@@ -657,12 +597,6 @@ def leccionnueva(request):
 								#si el alumno esta en esa asigntura le mando notificacion, sino no hago nada
 								if (i.usuario==j.usuario):
 							
-									#convierto a smart_str para que no de erro de UnicodeEncodeError
-									#asigna=smart_str(asignatura, encoding='utf-8')
-
-									#convierto a smart_str para que no de erro de UnicodeEncodeError
-
-
 									mens=asignatura+"=Nuevo aviso o consejo"
 									mens = smart_str(mens)
 
@@ -692,7 +626,7 @@ def leccionnueva(request):
 						#miro la asignatura del profesor
 						usuario=request.user.username
 						
-						#miro el colegio del profesor para poder filtrar tb por colegio
+						#miro el colegio del profesor para poder filtrar tambien por colegio
 						miusuario = User.objects.get(username=usuario)
 						usuario_colegio = miusuario.persona.colegio
 						
@@ -717,8 +651,6 @@ def leccionnueva(request):
 	#si no esta autenticado
 	else:
 		return HttpResponseRedirect('/login')
-
-
 
 #-------------------------------------------------------------------------------
 #Lección por asignatura
@@ -749,13 +681,8 @@ def leccionporasignatura(request, asign):
 
 				return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
 				
-
 	else:
 		return HttpResponseRedirect('/login')
-
-
-
-
 
 #-------------------------------------------------------------------------------
 #Tanto si es alumno como profesor devuelve la lista de lecciones
@@ -789,14 +716,10 @@ def leccion(request):
 		#si es alumno
 		else:
 			
-			
-			
 			#le envio el listado de sus asignaturas matriculadas para que elija cual ranking quiere
 			listaAsignaturas = AsignaturasAlumno.objects.filter(usuario=usuario)
 			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':'', 'listaAsignaturas':listaAsignaturas }, context_instance=RequestContext(request))   		
-			
-			
-			
+	
 			
 			try:
 				listado=Tips.objects.all()
@@ -811,7 +734,6 @@ def leccion(request):
 			return render_to_response('registration/leccion.html', {'alumno':usuario,'listadoalumno':listado }, context_instance=RequestContext(request))   
 	else:
 		return HttpResponseRedirect('/login')
-
 
 #-------------------------------------------------------------------------------
 #Muestra los comentarios enviados por el alumno al profesor
@@ -845,12 +767,6 @@ def leccioncomentarios(request):
 			return HttpResponseRedirect('/home')
 	else:
 		return HttpResponseRedirect('/login')
-
-
-
-
-
-
 
 #-------------------------------------------------------------------------------
 #prueba GCM
@@ -890,7 +806,6 @@ def pruebagcm(request):
 
 				response = conn.getresponse()
 				print response.status
-				#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
 				data = response.read()
 				print data
 				conn.close()
@@ -898,11 +813,9 @@ def pruebagcm(request):
 				error=''
 				exito="enviado"
 
-
 			except:
 				error= "Usuario no encontrado"
 				exito=''			
-
 
 			if request.user.is_staff:
 				profesor=usuario
@@ -913,12 +826,10 @@ def pruebagcm(request):
 	else:
 		return HttpResponseRedirect('/login')
 
-
 #-------------------------------------------------------------------------------
 #gráfica que devuelve las puntuaciones de tus alumnos
 #solo profesor
 #-------------------------------------------------------------------------------
-
 
 def graficapuntosasign(request):
 	
@@ -932,8 +843,6 @@ def graficapuntosasign(request):
 				#obtengo su asignatura
 				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 				asignatura=asignat.asignatura
-
-				
 				
 				punt=Puntuaciones.objects.all()
 				#filtro por asignatura
@@ -941,9 +850,7 @@ def graficapuntosasign(request):
 				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
 				punt=punt.extra(order_by = ['-puntos'])
 
-
 				return render_to_response('charts/puntuaciones.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
-
 				
 			else:
 				return HttpResponseRedirect('/home')
@@ -954,14 +861,11 @@ def graficapuntosasign(request):
 			
 	else:
 		return HttpResponseRedirect('/login')
-	
-	
-	
+		
 #-------------------------------------------------------------------------------
 #devuelvo usuarios para que pueda elegir uno
 #solo profesor
 #-------------------------------------------------------------------------------
-
 
 def graficatiempo(request):
 	
@@ -975,26 +879,20 @@ def graficatiempo(request):
 				#obtengo su asignatura
 				asignat=Asignaturas.objects.get(profesor=usuario, colegio=usuario_colegio)
 				asignatura=asignat.asignatura
-
-				
+			
 				listadoalumnos= AsignaturasAlumno.objects.filter(asignatura=asignatura)
-				
-				
-				
+								
 				return render_to_response('registration/grafica.html', {'listadoalumnos':listadoalumnos}, context_instance=RequestContext(request))
-
-				
+			
 			else:
 				return HttpResponseRedirect('/home')
 
 		else:#si no es GET
 			return HttpResponseRedirect('/home')
-
 			
 	else:
 		return HttpResponseRedirect('/login')
-	
-	
+		
 #-------------------------------------------------------------------------------
 #devuelvo gráfica por usuario del tiempo ocioso
 #solo profesor
@@ -1010,21 +908,16 @@ def graficatiempousuario(request, user):
 				#tocio = tocio.extra(where=['usuario=%s'], params=[usuario])
 				tocio=tocio.extra(order_by = ['fecha'])
 
-
-
 				return render_to_response('charts/tiempoociosoalumno.html', {'tocio':tocio}, context_instance=RequestContext(request))
-
-				
+			
 			else:
 				return HttpResponseRedirect('/home')
 
 		else:#si no es GET
 			return HttpResponseRedirect('/home')
-
 			
 	else:
 		return HttpResponseRedirect('/login')
-
 
 #-------------------------------------------------------------------------------
 #devuelve la gráfica con los tipos de preguntas hechas por los usuarios
@@ -1050,7 +943,6 @@ def graficatipopreguntas(request, asign):
 				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
 
 				return render_to_response('charts/tipopreguntas.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
-
 				
 			else:
 			#si es alumno
@@ -1063,10 +955,8 @@ def graficatipopreguntas(request, asign):
 
 				return render_to_response('charts/tipopreguntasalumno.html', {'puntuaciones':punt, 'asignatura':asign}, context_instance=RequestContext(request))
 
-
 		else:#si no es GET
 			return HttpResponseRedirect('/home')
-
 			
 	else:
 		return HttpResponseRedirect('/login')
@@ -1094,9 +984,7 @@ def graficaaciertos(request, asign):
 				punt = punt.extra(where=['asignatura=%s'], params=[asignatura])
 				punt = punt.extra(where=['colegio=%s'], params=[usuario_colegio])
 
-
 				return render_to_response('charts/aciertosfallos.html', {'asignatura':asignatura, 'puntuaciones':punt}, context_instance=RequestContext(request))
-
 				
 			else:
 			#si es alumno
@@ -1114,12 +1002,9 @@ def graficaaciertos(request, asign):
 
 		else:#si no es GET
 			return HttpResponseRedirect('/home')
-
 			
 	else:
 		return HttpResponseRedirect('/login')
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -1202,11 +1087,8 @@ def androidsignin(request):
 			record1=Persona(usuario=user, colegio=colegio, nombreyapellidos=nombreyapellidos)
 			record1.save()
 			
-
 			print unicode(csrf(request)['csrf_token'])
 			return HttpResponse('',unicode(c))
-
-
 
 	elif request.method == "GET":
 
@@ -1229,8 +1111,6 @@ def androidlogin(request):
 		password = request.POST['password']
 		type = request.POST['type']
 		idmovil = request.POST['idmovil']
-
-
 
 		user = authenticate(username=username, password=password)
 
@@ -1335,11 +1215,7 @@ def androidpidepreguntas(request, usuario):
 	c={}
 	c.update(csrf(request))
 
-	#user= usuario
-	#así selcciono de la base de datos, solo las preguntas dirigidas a los usuarios y los campos que solo necesito para no desvelar las respuestas
-	#data = serializers.serialize("json", PreguntasVisibles.objects.filter(usuario_pendiente=user), fields=('usuario_pendiente','pregunta', 'respuesta', 'respuesta2', 'respuesta3', 'tag'))
-	#return HttpResponse("{\"preguntas\":"+data+"}")
-	
+
 	if request.method == "POST":
 		user= usuario
 		asignatura = request.POST['asignatura']
@@ -1349,13 +1225,10 @@ def androidpidepreguntas(request, usuario):
 		data = serializers.serialize("json", p, fields=('usuario_pendiente','pregunta', 'respuesta', 'respuesta2', 'respuesta3', 'tag'))
 		return HttpResponse("{\"preguntas\":"+data+"}")
 
-
 	elif request.method == "GET":
 
 		print unicode(csrf(request)['csrf_token'])
 		return HttpResponse('',unicode(c))
-
-	
 
 #-------------------------------------------------------------------------------
 #Devuelve el listado de las preguntas realizadas
@@ -1366,12 +1239,6 @@ def androidlistacorrectas(request, usuario):
 	c={}
 	c.update(csrf(request))
 
-	#user= usuario
-	#p=PreguntasRespondidas.objects.filter(usuario_no_pendiente=user)
-	#p=p.extra(order_by = ['-fecha'])
-	#así selcciono de la base de datos, solo las preguntas dirigidas a los usuarios y los campos que solo necesito para no desvelar las respuestas
-	#data = serializers.serialize("json", p, fields=('pregunta', 'respuesta', 'respuesta_dada', 'respuesta_usuario_correcta'))
-	#return HttpResponse("{\"preguntas\":"+data+"}")
 	
 	if request.method == "POST":
 		user= usuario
@@ -1396,12 +1263,6 @@ def androidlistacorrectas(request, usuario):
 
 def androidclasificacion(request, usuario):
 
-	#p=Puntuaciones.objects.all()
-	#p=p.extra(order_by = ['-puntos'])
-	#data = serializers.serialize("json",p, fields=('usuario','puntos'))
-	#return HttpResponse("{\"puntos\":"+data+"}")
-	
-	#csrftoken
 	c={}
 
 	c.update(csrf(request))
@@ -1462,9 +1323,6 @@ def androidsumapregunta(request, usuario):
 		pobligada.preguntaobligada=pobligada.preguntaobligada+1
 		pobligada.save()
 
-	
-		
-
 		#convierto a smart_str para que no de erro de UnicodeEncodeError
 		mensa="ok="+asignatura
 		mensa = smart_str(mensa)
@@ -1472,11 +1330,7 @@ def androidsumapregunta(request, usuario):
 		return HttpResponse(mensa)
 	except:
 		return HttpResponse("fail=fail")
-	
-	
-	
-	
-	
+
 	
 #-------------------------------------------------------------------------------
 #incremento de tiempo ocioso
@@ -1512,10 +1366,6 @@ def androidtips(request):
 	c={}
 	c.update(csrf(request))
 
-	#l=Tips.objects.all()
-	#l=l.extra(order_by = ['-fecha'])
-	#data = serializers.serialize("json",l, fields=('leccion'))
-	#return HttpResponse("{\"tips\":"+data+"}")
 	
 	if request.method == "POST":
 		
@@ -1676,7 +1526,7 @@ def androidenviapreguntaextra(request, emisor, receptor):
 			try:
 				response = conn.getresponse()
 				print response.status
-				#mirar en http://docs.python.org/2/library/httplib.html codigos status y contemplar fallos
+				
 				data = response.read()
 
 				conn.close()

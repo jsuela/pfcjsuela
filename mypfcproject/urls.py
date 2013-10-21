@@ -28,13 +28,7 @@ urlpatterns = patterns('',
     url(r'^edita/(?P<user>.*)$', 'pfcapp.views.editausuario', name='editausuario'),
     url(r'^edita', 'pfcapp.views.edita', name='edita'),
 
-    
-
-
-
-	#url(r'^pruebagrafica', 'pfcapp.views.pruebagrafica', name='pruebagrafica'),
 	url(r'^pruebagcm', 'pfcapp.views.pruebagcm', name='pruebagcm'),
-    #graficando
     url(r'^grafica/aciertos/(?P<asign>.*)$', 'pfcapp.views.graficaaciertos', name='graficaaciertos'),
     url(r'^grafica/tipopreguntas/(?P<asign>.*)$', 'pfcapp.views.graficatipopreguntas', name='graficatipopreguntas'),
     url(r'^grafica/puntos', 'pfcapp.views.graficapuntosasign', name='graficapuntosasign'),
@@ -42,12 +36,6 @@ urlpatterns = patterns('',
     url(r'^grafica/tiempo', 'pfcapp.views.graficatiempo', name='graficatiempo'),
     url(r'^grafica/(?P<asign>.*)$', 'pfcapp.views.graficaporasignatura', name='graficaporasignatura'),
     url(r'^grafica', 'pfcapp.views.grafica', name='grafica'),
-
-
-
-
-
-
 
 	#android
     url(r'^android/clasificacion/(?P<usuario>.*)$', 'pfcapp.views.androidclasificacion', name='androidclasificacion'),
@@ -67,14 +55,7 @@ urlpatterns = patterns('',
     url(r'^android/asignaturas/matricula', 'pfcapp.views.androidasignaturasmatricula', name='androidasignaturasmatricula'),
     url(r'^android/colegios', 'pfcapp.views.androidcolegios', name='androidcolegios'),
     url(r'^android/comentario', 'pfcapp.views.androidcomentario', name='androidcomentario'),
-
-
-
 	url(r'^android/gcm/registro', 'pfcapp.views.androidgcmregistrocliente', name='androidgcmregistrocliente'),
-
-
-
-
 
 	url(r'^accounts/profile/','pfcapp.views.home', name='home'),
     url(r'^cses', 'pfcapp.views.cses', name='cses'),
